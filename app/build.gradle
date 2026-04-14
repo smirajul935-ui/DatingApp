@@ -1,0 +1,31 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.tech.datingapp'
+    compileSdk 33
+
+    defaultConfig {
+        applicationId "com.tech.datingapp"
+        minSdk 24
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true  // 🔒 YAHI HACKER KO ROKEGA (Encrypt karega)
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.8.0'
+    implementation 'com.android.volley:volley:1.2.1' // Server se baat karne k liye
+    implementation 'io.agora.rtc:full-sdk:4.1.1' // Voice Chat
+}
