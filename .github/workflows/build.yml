@@ -18,8 +18,14 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    # Ye direct system gradle use karega, gradlew ki zarurat nahi padegi
-    - name: Build APK without Wrapper
+    # Ye naya step GitHub server me Gradle software install karega
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+      with:
+        gradle-version: '8.0' 
+
+    # Ab ye command 100% chalegi bina kisi error ke
+    - name: Build APK
       run: gradle assembleDebug
 
     - name: Upload APK
