@@ -12,7 +12,7 @@ import com.android.volley.toolbox.Volley;
 
 public class MainActivity extends AppCompatActivity {
 
-    // 🔒 Tumhara Render Server Link 
+    // Tumhara Render Server Link
     String SERVER_URL = "https://datingserver-ymcg.onrender.com";
     
     TextView tvStatus;
@@ -21,25 +21,22 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Ye line layout ko screen par dikhayegi
         setContentView(R.layout.activity_main); 
 
         tvStatus = findViewById(R.id.tvStatus);
         btnConnect = findViewById(R.id.btnConnect);
 
-        // 🚨 APP START HOTE HI HACKER CHECK
+        // 🚨 SECURITY CHECK BYPASS (Sirf testing ke liye)
         if (SecurityUtil.isHackerDevice()) {
-            Toast.makeText(this, "Modded Device Blocked!", Toast.LENGTH_LONG).show();
-            finishAffinity(); 
-            return;
+            Toast.makeText(this, "Security Warning: Custom device detected, but bypassing for testing.", Toast.LENGTH_LONG).show();
+            // finishAffinity(); <-- HUMNE APP BAND HONE WALI LINE HATA DI
         }
 
-        // Button dabane par server se token mangenge
         btnConnect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 tvStatus.setText("Status: Connecting to Server...");
-                btnConnect.setEnabled(false); // Double click rokne ke liye
+                btnConnect.setEnabled(false); 
                 testServerConnection();
             }
         });
@@ -50,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
 
         StringRequest request = new StringRequest(Request.Method.GET, finalUrl,
             response -> {
-                // Screen par token dikhayega
+                // Token aayega aur screen par dikhega
                 tvStatus.setText("Secure Token Received:\n" + response);
                 tvStatus.setTextColor(android.graphics.Color.GREEN);
                 btnConnect.setEnabled(true);
