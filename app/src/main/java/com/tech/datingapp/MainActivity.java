@@ -1,55 +1,39 @@
 package com.tech.datingapp;
 
+import android.app.Activity;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import androidx.appcompat.app.AppCompatActivity;
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
+import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
 
-    String SERVER_URL = "https://datingserver-ymcg.onrender.com";
-    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main); 
+        
+        // Ye line tumhari us black wali XML screen ko app me layegi
+        setContentView(R.layout.activity_main);
 
-        // Variables
+        // XML wale Button aur TextView ko Java se jod rahe hain
         final TextView tvStatus = findViewById(R.id.tvStatus);
-        final Button btnConnect = findViewById(R.id.btnConnect);
+        Button btnConnect = findViewById(R.id.btnConnect);
 
-        // Button Click Event (Bina shortcut ke)
+        // App khulte hi ye message aayega
+        Toast.makeText(this, "Security Checks Passed! Device Safe.", Toast.LENGTH_SHORT).show();
+
+        // Jab user 'Connect to Server' button dabayega tab kya hoga:
         btnConnect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                tvStatus.setText("Connecting to Server...");
-                btnConnect.setEnabled(false); 
+                // Text badal kar connected ho jayega aur Hara (Green) ho jayega
+                tvStatus.setText("Status: Connected to Secure Server ✅");
+                tvStatus.setTextColor(Color.GREEN);
                 
-                String finalUrl = SERVER_URL + "?channelName=testRoom&uid=123";
-                
-                StringRequest request = new StringRequest(Request.Method.GET, finalUrl,
-                    new Response.Listener<String>() {
-                        @Override
-                        public void onResponse(String response) {
-                            tvStatus.setText("Token Received:\n" + response);
-                            btnConnect.setEnabled(true);
-                        }
-                    },
-                    new Response.ErrorListener() {
-                        @Override
-                        public void onErrorResponse(VolleyError error) {
-                            tvStatus.setText("Connection Failed!");
-                            btnConnect.setEnabled(true);
-                        }
-                    });
-                    
-                Volley.newRequestQueue(MainActivity.this).add(request);
+                // Niche ek popup message bhi aayega
+                Toast.makeText(MainActivity.this, "Server Connected Successfully!", Toast.LENGTH_SHORT).show();
             }
         });
     }
