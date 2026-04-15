@@ -4,7 +4,6 @@
     android:layout_height="match_parent"
     android:background="#0A0A1A">
 
-    <!-- 🌟 TOP BAR -->
     <RelativeLayout
         android:id="@+id/topBar"
         android:layout_width="match_parent"
@@ -15,183 +14,32 @@
             android:id="@+id/tvRoomName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Love Talk 💕"
+            android:text="Chat Room"
             android:textColor="#FFFFFF"
             android:textSize="22sp"
             android:textStyle="bold"/>
-
-        <ImageView
-            android:layout_width="25dp"
-            android:layout_height="25dp"
-            android:layout_alignParentRight="true"
-            android:src="@android:drawable/ic_menu_preferences"
-            android:tint="#FFFFFF"/>
     </RelativeLayout>
 
-    <!-- 🎧 STATUS BAR (Speakers / Listeners) -->
-    <LinearLayout
-        android:id="@+id/statusBar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/topBar"
-        android:orientation="horizontal"
-        android:paddingHorizontal="15dp"
-        android:paddingBottom="10dp">
-        
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="🎙️ Voice Chat • 8 Speakers"
-            android:textColor="#AAAAAA"
-            android:textSize="14sp"/>
-    </LinearLayout>
-
-    <!-- 🪑 USERS SEATS (Top Area) -->
-    <LinearLayout
-        android:id="@+id/seatsLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/statusBar"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:padding="15dp">
-
-        <!-- Seat 1 (Host) -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:layout_marginRight="20dp">
-            
-            <ImageView
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:background="@drawable/bg_neon_circle"
-                android:src="@android:drawable/ic_menu_myplaces"
-                android:padding="15dp"
-                android:tint="#FFFFFF"/>
-            
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="John"
-                android:textColor="#FFFFFF"
-                android:textStyle="bold"
-                android:layout_marginTop="5dp"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Host"
-                android:textColor="#E91E63"
-                android:textSize="12sp"/>
-        </LinearLayout>
-
-        <!-- Seat 2 (Speaking) -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:layout_marginRight="20dp">
-            
-            <ImageView
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:background="@drawable/bg_neon_circle"
-                android:src="@android:drawable/ic_menu_camera"
-                android:padding="15dp"
-                android:tint="#FFC107"/>
-            
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Emma"
-                android:textColor="#FFFFFF"
-                android:textStyle="bold"
-                android:layout_marginTop="5dp"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Speaking..."
-                android:textColor="#FFC107"
-                android:textSize="12sp"/>
-        </LinearLayout>
-
-        <!-- Seat 3 (Empty/Invite) -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center">
-            
-            <ImageView
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:background="@drawable/bg_round_dark"
-                android:src="@android:drawable/ic_menu_add"
-                android:padding="20dp"
-                android:tint="#AAAAAA"/>
-            
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Empty"
-                android:textColor="#AAAAAA"
-                android:layout_marginTop="5dp"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="+ Invite"
-                android:textColor="#2196F3"
-                android:textSize="12sp"/>
-        </LinearLayout>
-    </LinearLayout>
-
-    <!-- 💬 LIVE CHAT COMMENTS SECTION (Seats ke niche) -->
+    <!-- LIVE CHAT COMMENTS SECTION -->
     <ScrollView
         android:id="@+id/chatScroll"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/seatsLayout"
+        android:layout_below="@id/topBar"
         android:layout_above="@id/bottomControls"
         android:padding="15dp"
         android:scrollbars="none">
 
+        <!-- Yaha ID missing thi, ab dal di hai -->
         <LinearLayout
+            android:id="@+id/layoutMessages"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
-
-            <!-- Dummy Comment 1 -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="❤️ Emma joined the room"
-                android:textColor="#E91E63"
-                android:layout_marginBottom="10dp"
-                android:textStyle="bold"/>
-
-            <!-- Dummy Comment 2 -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="John: Hey everyone! Welcome to Love Talk."
-                android:textColor="#FFFFFF"
-                android:layout_marginBottom="10dp"/>
-
-            <!-- Dummy Comment 3 -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Olivia: Emma your voice is so sweet 😊"
-                android:textColor="#FFFFFF"
-                android:layout_marginBottom="10dp"/>
-                
         </LinearLayout>
     </ScrollView>
 
-    <!-- 🎛️ BOTTOM CONTROLS (Input + Buttons) -->
+    <!-- BOTTOM CONTROLS -->
     <LinearLayout
         android:id="@+id/bottomControls"
         android:layout_width="match_parent"
@@ -201,7 +49,6 @@
         android:background="#0A0A1A"
         android:padding="15dp">
 
-        <!-- Message Type Area -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -229,12 +76,10 @@
                 android:textColor="#2196F3"/>
         </LinearLayout>
 
-        <!-- Mic, Leave, Video Buttons -->
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <!-- Mic Button -->
             <ImageView
                 android:id="@+id/btnMic"
                 android:layout_width="50dp"
@@ -245,7 +90,6 @@
                 android:tint="#8A2BE2"
                 android:padding="10dp"/>
 
-            <!-- Leave Button -->
             <Button
                 android:id="@+id/btnLeave"
                 android:layout_width="160dp"
@@ -257,7 +101,6 @@
                 android:textSize="18sp"
                 android:textAllCaps="false"/>
 
-            <!-- Video Button -->
             <ImageView
                 android:id="@+id/btnVideo"
                 android:layout_width="50dp"
