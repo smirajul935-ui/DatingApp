@@ -43,8 +43,9 @@ public class ChatroomActivity extends AppCompatActivity {
     FirebaseFirestore db;
     String roomName, currentUserEmail, currentUserId;
     
-    // 🔥 SECURE HOST VARIABLE
+    // 🔥 SECURITY VARIABLES
     boolean isHost = false; 
+    boolean isOnSeat = false; // Check karega user seat par hai ya nahi
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,11 +61,11 @@ public class ChatroomActivity extends AppCompatActivity {
         } else {
             currentUserEmail = "Guest";
             currentUserId = "GuestID";
-            finish(); // Bina login wala allow nahi hoga
+            finish(); 
         }
 
         tvRoomName = findViewById(R.id.tvRoomName);
-        tvSeat1 = findViewById(R.id.tvSeat1); // Host ki seat ka text
+        tvSeat1 = findViewById(R.id.tvSeat1);
         btnMic = findViewById(R.id.btnMic);
         btnVideo = findViewById(R.id.btnVideo);
         btnLeave = findViewById(R.id.btnLeave);
@@ -79,13 +80,13 @@ public class ChatroomActivity extends AppCompatActivity {
         roomName = getIntent().getStringExtra("ROOM_NAME");
         if(roomName != null) {
             tvRoomName.setText(roomName);
-            // 🚨 SABSE PEHLE SERVER SE PUCHO HOST KAUN HAI
             verifyHostFromServer(); 
+            listenToSeatStatus(); // 🔥 Server se check karega ki seat pe kon baitha hai
         } else {
             finish();
         }
 
-        // --- SEAT CLICK (Role-based Power Check) ---
+        // --- SEAT CLICK (Host Power Check) ---
         seat2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -93,6 +94,19 @@ public class ChatroomActivity extends AppCompatActivity {
                     showHostPowersDialog("Seat 2");
                 } else {
                     Toast.makeText(ChatroomActivity.this, "Only Host can add you to a seat!", Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+
+        // --- MIC PERMISSION LOGIC (Server Verified) ---
+        btnMic.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (isHost || isOnSeat) {
+                    Toast.makeText(ChatroomActivity.this, "Mic is ON 🎙️", Toast.LENGTH_SHORT).show();
+                    // Aage chalkar yaha Agora Voice enable hoga
+                } else {
+                    Toast.makeText(ChatroomActivity.this, "❌ You are in Audience. Wait for Host to invite you!", Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -154,7 +168,6 @@ public class ChatroomActivity extends AppCompatActivity {
 
     // 🚨 100% SECURE: Server Se Verify Karo Ki Main Host Hu Ya Nahi
     private void verifyHostFromServer() {
-        // Firebase me check karo jisne room banaya uska ID kya tha
         db.collection("Rooms").whereEqualTo("roomName", roomName).get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
@@ -163,7 +176,6 @@ public class ChatroomActivity extends AppCompatActivity {
                             DocumentSnapshot document = task.getResult().getDocuments().get(0);
                             String serverHostId = document.getString("hostId");
 
-                            // Agar Server ki ID aur meri ID match hoti hai, tabhi Power milegi
                             if (serverHostId != null && serverHostId.equals(currentUserId)) {
                                 isHost = true;
                                 tvSeat1.setText("You (Host)");
@@ -177,14 +189,20 @@ public class ChatroomActivity extends AppCompatActivity {
                 });
     }
 
-    // 🔥 HOST POWERS POPUP (Add, Mute, Kick, Block)
-    private void showHostPowersDialog(String seatName) {
+    // 🚨 NEW: Server Se check karo kya Host ne mujhe Seat di hai?
+    private void listenToSeatStatus() {
+        // Abhi initial test ke liye isko false rakha hai (Matlab starting me sab Audience hain)
+        // Next phase me hum isko Firebase ke "Seats" folder se link karenge!
+        isOnSeat = false; 
+    }
+
+    // 🔥 HOST POWERS POPUP (Fixed Error)
+    private void showHostPowersDialog(final String seatName) {
         String[] powers = {"Invite User", "Mute Seat", "Kick User", "Block User"};
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Host Controls (" + seatName + ")");
-        builder.setItems(powers, new DialogInterface.DialogInterface.OnClickListener() {
-            @Override
+        builder.setItems(powers, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
                 switch (which) {
                     case 0:
