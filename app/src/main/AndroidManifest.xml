@@ -14,6 +14,9 @@
         android:usesCleartextTraffic="true" 
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
         
+        <!-- Yaha humne bataya ki HomeActivity naam ki ek screen hai -->
+        <activity android:name=".HomeActivity" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
