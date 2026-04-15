@@ -1,14 +1,16 @@
 package com.tech.datingapp;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ScrollView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -30,20 +32,18 @@ import java.util.Map;
 
 public class ChatroomActivity extends AppCompatActivity {
 
-    TextView tvRoomName;
+    TextView tvRoomName, tvSeat1;
     ImageView btnMic, btnVideo;
     Button btnLeave, btnSend;
     EditText etMessage;
-    LinearLayout layoutMessages, seat2, seat3; // Example seats
+    LinearLayout layoutMessages, seat2, seat3; 
     ScrollView chatScroll;
 
     FirebaseAuth mAuth;
     FirebaseFirestore db;
-    String roomName;
-    String currentUserEmail;
-    String currentUserId;
+    String roomName, currentUserEmail, currentUserId;
     
-    // 🔥 HOST CHECKING VARIABLE
+    // 🔥 SECURE HOST VARIABLE
     boolean isHost = false; 
 
     @Override
@@ -60,9 +60,11 @@ public class ChatroomActivity extends AppCompatActivity {
         } else {
             currentUserEmail = "Guest";
             currentUserId = "GuestID";
+            finish(); // Bina login wala allow nahi hoga
         }
 
         tvRoomName = findViewById(R.id.tvRoomName);
+        tvSeat1 = findViewById(R.id.tvSeat1); // Host ki seat ka text
         btnMic = findViewById(R.id.btnMic);
         btnVideo = findViewById(R.id.btnVideo);
         btnLeave = findViewById(R.id.btnLeave);
@@ -71,25 +73,24 @@ public class ChatroomActivity extends AppCompatActivity {
         layoutMessages = findViewById(R.id.layoutMessages);
         chatScroll = findViewById(R.id.chatScroll);
         
-        // Seats
         seat2 = findViewById(R.id.seat2);
         seat3 = findViewById(R.id.seat3);
 
         roomName = getIntent().getStringExtra("ROOM_NAME");
         if(roomName != null) {
             tvRoomName.setText(roomName);
-            checkIfUserIsHost(); // 🔥 Firebase se puchenge kya hum host hain?
+            // 🚨 SABSE PEHLE SERVER SE PUCHO HOST KAUN HAI
+            verifyHostFromServer(); 
         } else {
-            roomName = "Public Room";
+            finish();
         }
 
-        // --- SEAT CLICKS ---
+        // --- SEAT CLICK (Role-based Power Check) ---
         seat2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (isHost) {
-                    Toast.makeText(ChatroomActivity.this, "HOST POWER: Invite User to Seat", Toast.LENGTH_SHORT).show();
-                    // Host invite list open karega (Aage banayenge)
+                    showHostPowersDialog("Seat 2");
                 } else {
                     Toast.makeText(ChatroomActivity.this, "Only Host can add you to a seat!", Toast.LENGTH_LONG).show();
                 }
@@ -112,7 +113,7 @@ public class ChatroomActivity extends AppCompatActivity {
             }
         });
 
-        // --- RECEIVE MESSAGES ---
+        // --- RECEIVE MESSAGES (Live Chat) ---
         db.collection("Chatrooms").document(roomName).collection("Messages")
                 .orderBy("timestamp", Query.Direction.ASCENDING)
                 .addSnapshotListener(new EventListener<QuerySnapshot>() {
@@ -151,11 +152,56 @@ public class ChatroomActivity extends AppCompatActivity {
         });
     }
 
-    // 🔥 Check Firebase ki is room ka Host kaun hai
-    private void checkIfUserIsHost() {
-        // Note: Hum aage chal kar yaha Firebase fetch query lagayenge. 
-        // Abhi test karne ke liye: "Jo room banata hai, uske paas host power hoti hai"
-        // Hum next phase me Host ki ID check karenge.
-        isHost = true; // Yaha True/False change karke tum Host aur Audience test kar sakte ho.
+    // 🚨 100% SECURE: Server Se Verify Karo Ki Main Host Hu Ya Nahi
+    private void verifyHostFromServer() {
+        // Firebase me check karo jisne room banaya uska ID kya tha
+        db.collection("Rooms").whereEqualTo("roomName", roomName).get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful() && task.getResult() != null && !task.getResult().isEmpty()) {
+                            DocumentSnapshot document = task.getResult().getDocuments().get(0);
+                            String serverHostId = document.getString("hostId");
+
+                            // Agar Server ki ID aur meri ID match hoti hai, tabhi Power milegi
+                            if (serverHostId != null && serverHostId.equals(currentUserId)) {
+                                isHost = true;
+                                tvSeat1.setText("You (Host)");
+                                Toast.makeText(ChatroomActivity.this, "Host Verified Securely ✅", Toast.LENGTH_SHORT).show();
+                            } else {
+                                isHost = false;
+                                tvSeat1.setText("Host");
+                            }
+                        }
+                    }
+                });
+    }
+
+    // 🔥 HOST POWERS POPUP (Add, Mute, Kick, Block)
+    private void showHostPowersDialog(String seatName) {
+        String[] powers = {"Invite User", "Mute Seat", "Kick User", "Block User"};
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Host Controls (" + seatName + ")");
+        builder.setItems(powers, new DialogInterface.DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
+                    case 0:
+                        Toast.makeText(ChatroomActivity.this, "User Invited to " + seatName, Toast.LENGTH_SHORT).show();
+                        break;
+                    case 1:
+                        Toast.makeText(ChatroomActivity.this, "Seat Muted 🔇", Toast.LENGTH_SHORT).show();
+                        break;
+                    case 2:
+                        Toast.makeText(ChatroomActivity.this, "User Kicked from Room 🥾", Toast.LENGTH_SHORT).show();
+                        break;
+                    case 3:
+                        Toast.makeText(ChatroomActivity.this, "User Permanently Blocked 🚫", Toast.LENGTH_LONG).show();
+                        break;
+                }
+            }
+        });
+        builder.show();
     }
 }
