@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#0A0A1A"
+    android:padding="25dp"
+    android:gravity="center">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="⚠️ Terms &amp; Conditions"
+        android:textColor="#E91E63"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="20dp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="By using this app, you agree that:\n\n• You are fully responsible for your account and activity.\n• The app is not 100% secure; data loss, hacking, or leaks may occur.\n• Interacting or meeting other users is at your own risk.\n• The developer is not responsible for any fraud, scam, or user issues.\n• The app is provided 'as-is' with no guarantees.\n• Under no condition will the developer be liable for any loss or damage."
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:lineSpacingExtra="5dp"
+        android:layout_marginBottom="20dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="👉 Use at Your Own Risk – 100% User Responsibility"
+        android:textColor="#FFC107"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="20dp"/>
+
+    <CheckBox
+        android:id="@+id/cbAgree1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="I have read and understood the risks."
+        android:textColor="#AAAAAA"
+        android:buttonTint="#E91E63"/>
+
+    <CheckBox
+        android:id="@+id/cbAgree2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="[✔ I Agree] to the Terms &amp; Conditions."
+        android:textColor="#AAAAAA"
+        android:buttonTint="#E91E63"
+        android:layout_marginBottom="20dp"/>
+
+    <Button
+        android:id="@+id/btnProceed"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:text="PROCEED TO APP"
+        android:backgroundTint="#333333"
+        android:textColor="#888888"
+        android:enabled="false"/>
+</LinearLayout>
