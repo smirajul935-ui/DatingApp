@@ -3,64 +3,63 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center"
-    android:background="#121212"
-    android:padding="30dp">
+    android:background="#121212"> <!-- Dark Theme Background -->
 
-    <!-- App Ka Naam -->
+    <!-- Upar ka Header -->
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Secure Dating"
-        android:textColor="#E91E63"
-        android:textSize="32sp"
+        android:text="Secure Private Chat"
+        android:textColor="#FFFFFF"
+        android:textSize="22sp"
         android:textStyle="bold"
-        android:layout_marginBottom="40dp"/>
+        android:background="#E91E63"
+        android:padding="15dp"
+        android:gravity="center"/>
 
-    <!-- Email Box -->
-    <EditText
-        android:id="@+id/etEmail"
+    <!-- Ye wo jagah hai jaha saare messages dikhenge (Yehi layoutMessages hai) -->
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:hint="Email Address"
-        android:textColorHint="#888888"
-        android:textColor="#FFFFFF"
-        android:backgroundTint="#E91E63"
-        android:inputType="textEmailAddress"
-        android:layout_marginBottom="20dp"/>
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="10dp">
 
-    <!-- Password Box -->
-    <EditText
-        android:id="@+id/etPassword"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:hint="Password (Min 6 letters)"
-        android:textColorHint="#888888"
-        android:textColor="#FFFFFF"
-        android:backgroundTint="#E91E63"
-        android:inputType="textPassword"
-        android:layout_marginBottom="40dp"/>
+        <LinearLayout
+            android:id="@+id/layoutMessages"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"/>
+    </ScrollView>
 
-    <!-- Login Button -->
-    <Button
-        android:id="@+id/btnLogin"
+    <!-- Niche Message type karne ka dabba aur Send Button -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:text="LOGIN"
-        android:backgroundTint="#E91E63"
-        android:textColor="#FFFFFF"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="15dp"/>
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="10dp"
+        android:background="#1E1E1E">
 
-    <!-- Signup Button -->
-    <Button
-        android:id="@+id/btnSignup"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:text="CREATE NEW ACCOUNT"
-        android:backgroundTint="#333333"
-        android:textColor="#FFFFFF"
-        android:textSize="16sp"/>
+        <EditText
+            android:id="@+id/etMessage"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:hint="Type a message..."
+            android:textColorHint="#888888"
+            android:textColor="#FFFFFF"
+            android:background="#333333"
+            android:paddingLeft="15dp"
+            android:paddingRight="15dp" />
+
+        <Button
+            android:id="@+id/btnSend"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:text="SEND"
+            android:backgroundTint="#E91E63"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:layout_marginLeft="10dp"/>
+    </LinearLayout>
 
 </LinearLayout>
