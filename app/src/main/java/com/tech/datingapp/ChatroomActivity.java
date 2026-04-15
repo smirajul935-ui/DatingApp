@@ -1,6 +1,7 @@
 package com.tech.datingapp;
 
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -9,12 +10,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ScrollView;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.Nullable;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentChange;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -64,58 +69,80 @@ public class ChatroomActivity extends AppCompatActivity {
             roomName = "Public Room";
         }
 
-        // 1. MESSAGES KO FIREBASE ME SAVE KARNA (Send Button)
-        btnSend.setOnClickListener(v -> {
-            String message = etMessage.getText().toString().trim();
-            if(!message.isEmpty()){
-                etMessage.setText(""); // Box khali karo
+        // 1. SEND BUTTON (Message save karna)
+        btnSend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String message = etMessage.getText().toString().trim();
+                if(!message.isEmpty()){
+                    etMessage.setText(""); 
 
-                // Database me bhejne ke liye data taiyar karna
-                Map<String, Object> chatData = new HashMap<>();
-                chatData.put("sender", currentUserEmail);
-                chatData.put("message", message);
-                chatData.put("timestamp", FieldValue.serverTimestamp());
+                    Map<String, Object> chatData = new HashMap<>();
+                    chatData.put("sender", currentUserEmail);
+                    chatData.put("message", message);
+                    chatData.put("timestamp", FieldValue.serverTimestamp());
 
-                // Firebase me bhejna
-                db.collection("Chatrooms").document(roomName).collection("Messages")
-                        .add(chatData);
+                    db.collection("Chatrooms").document(roomName).collection("Messages").add(chatData);
+                }
             }
         });
 
-        // 2. FIREBASE SE MESSAGES SCREEN PAR DIKHANA (Real-time Live Chat)
+        // 2. RECEIVE MESSAGES (Real-time Chat)
         db.collection("Chatrooms").document(roomName).collection("Messages")
                 .orderBy("timestamp", Query.Direction.ASCENDING)
-                .addSnapshotListener((value, error) -> {
-                    if (error != null || value == null) return;
+                .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                    @Override
+                    public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
+                        if (error != null || value == null) return;
 
-                    for (DocumentChange dc : value.getDocumentChanges()) {
-                        if (dc.getType() == DocumentChange.Type.ADDED) {
-                            String msgText = dc.getDocument().getString("message");
-                            String sender = dc.getDocument().getString("sender");
+                        for (DocumentChange dc : value.getDocumentChanges()) {
+                            if (dc.getType() == DocumentChange.Type.ADDED) {
+                                String msgText = dc.getDocument().getString("message");
+                                String sender = dc.getDocument().getString("sender");
 
-                            // Screen par naya message dikhane ke liye Design banana
-                            TextView newMsg = new TextView(ChatroomActivity.this);
-                            
-                            // Email me se naam nikalna (jaise test@gmail.com ka "test")
-                            String shortName = sender.split("@")[0];
-                            
-                            newMsg.setText(shortName + ": " + msgText);
-                            newMsg.setTextColor(android.graphics.Color.WHITE);
-                            newMsg.setTextSize(16f);
-                            newMsg.setPadding(0, 0, 0, 20);
+                                if (msgText != null && sender != null) {
+                                    TextView newMsg = new TextView(ChatroomActivity.this);
+                                    String shortName = sender.split("@")[0];
+                                    
+                                    newMsg.setText(shortName + ": " + msgText);
+                                    newMsg.setTextColor(android.graphics.Color.WHITE);
+                                    newMsg.setTextSize(16f);
+                                    newMsg.setPadding(0, 0, 0, 20);
 
-                            // Message ko screen (LinearLayout) me add karna
-                            layoutMessages.addView(newMsg);
+                                    layoutMessages.addView(newMsg);
 
-                            // Scroll karke sabse naye message par aana
-                            chatScroll.post(() -> chatScroll.fullScroll(View.FOCUS_DOWN));
+                                    chatScroll.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            chatScroll.fullScroll(View.FOCUS_DOWN);
+                                        }
+                                    });
+                                }
+                            }
                         }
                     }
                 });
 
         // Other buttons
-        btnMic.setOnClickListener(v -> Toast.makeText(this, "Mic toggled!", Toast.LENGTH_SHORT).show());
-        btnVideo.setOnClickListener(v -> Toast.makeText(this, "Video Camera toggled!", Toast.LENGTH_SHORT).show());
-        btnLeave.setOnClickListener(v -> finish());
+        btnMic.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(ChatroomActivity.this, "Mic toggled!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        btnVideo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(ChatroomActivity.this, "Video Camera toggled!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        btnLeave.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
     }
 }
