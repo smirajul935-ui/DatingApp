@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0A0A1A">
+
+    <!-- TOP BAR -->
+    <RelativeLayout
+        android:id="@+id/chatTopBar"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:background="#1A1A2E"
+        android:paddingHorizontal="15dp">
+
+        <TextView
+            android:id="@+id/tvRoomName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:text="Love Talk 💕"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold"/>
+
+        <!-- Voice Chat (Mic) Button -->
+        <ImageView
+            android:id="@+id/btnMic"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/bg_button"
+            android:padding="8dp"
+            android:src="@android:drawable/ic_btn_speak_now"
+            android:tint="#FFFFFF"/>
+    </RelativeLayout>
+
+    <!-- MESSAGES LIST (Yaha saare messages aayenge) -->
+    <ScrollView
+        android:id="@+id/scrollMessages"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/bottomLayout"
+        android:layout_below="@id/chatTopBar"
+        android:padding="10dp">
+        
+        <LinearLayout
+            android:id="@+id/layoutMessages"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <!-- Messages yaha add honge (Java ke through) -->
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- BOTTOM BAR (Message Type Karne Ki Jagah) -->
+    <LinearLayout
+        android:id="@+id/bottomLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="#1A1A2E"
+        android:orientation="horizontal"
+        android:padding="10dp">
+
+        <EditText
+            android:id="@+id/etMessage"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_card"
+            android:hint="Type a message..."
+            android:paddingHorizontal="15dp"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#888888"/>
+
+        <Button
+            android:id="@+id/btnSend"
+            android:layout_width="60dp"
+            android:layout_height="50dp"
+            android:layout_marginLeft="10dp"
+            android:background="@drawable/bg_button"
+            android:text="➤"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"/>
+    </LinearLayout>
+
+</RelativeLayout>
