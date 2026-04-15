@@ -24,9 +24,18 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
+        
         mAuth = FirebaseAuth.getInstance();
+
+        // 🚨 AUTO-LOGIN CHECK: Agar login hai toh direct T&C screen par jao
+        if (mAuth.getCurrentUser() != null) {
+            Intent intent = new Intent(MainActivity.this, TermsActivity.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
+
+        setContentView(R.layout.activity_main);
 
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
@@ -52,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
                             public void onComplete(@NonNull Task<AuthResult> task) {
                                 if (task.isSuccessful()) {
                                     Toast.makeText(MainActivity.this, "Signup Successful! ✅", Toast.LENGTH_LONG).show();
-                                    Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                                    Intent intent = new Intent(MainActivity.this, TermsActivity.class);
                                     startActivity(intent);
                                     finish();
                                 } else {
@@ -82,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
                             public void onComplete(@NonNull Task<AuthResult> task) {
                                 if (task.isSuccessful()) {
                                     Toast.makeText(MainActivity.this, "Login Successful! 🎉", Toast.LENGTH_LONG).show();
-                                    Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                                    Intent intent = new Intent(MainActivity.this, TermsActivity.class);
                                     startActivity(intent);
                                     finish();
                                 } else {
