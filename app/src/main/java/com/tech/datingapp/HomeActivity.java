@@ -14,18 +14,27 @@ import android.widget.RadioButton;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 public class HomeActivity extends AppCompatActivity {
 
     ImageView btnMessages, btnProfile, btnCreateRoom;
+    RecyclerView rvRooms;
+    RoomAdapter roomAdapter;
+    ArrayList<Map<String, Object>> roomList;
+
     FirebaseAuth mAuth;
     FirebaseFirestore db;
 
@@ -40,6 +49,16 @@ public class HomeActivity extends AppCompatActivity {
         btnMessages = findViewById(R.id.btnMessages);
         btnProfile = findViewById(R.id.btnProfile);
         btnCreateRoom = findViewById(R.id.btnCreateRoom);
+        
+        // RecyclerView Setup
+        rvRooms = findViewById(R.id.rvRooms);
+        rvRooms.setLayoutManager(new LinearLayoutManager(this));
+        roomList = new ArrayList<>();
+        roomAdapter = new RoomAdapter(this, roomList);
+        rvRooms.setAdapter(roomAdapter);
+
+        // Fetch Rooms from Firebase
+        fetchRoomsFromFirebase();
 
         // CREATE ROOM BUTTON CLICK
         if (btnCreateRoom != null) {
@@ -50,6 +69,24 @@ public class HomeActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+    // 🔥 FIREBASE SE REAL ROOMS NIKALNA
+    private void fetchRoomsFromFirebase() {
+        db.collection("Rooms").addSnapshotListener((value, error) -> {
+            if (error != null || value == null) {
+                Toast.makeText(HomeActivity.this, "Failed to load rooms", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
+            roomList.clear(); // Purani list saaf karo
+            for (DocumentSnapshot doc : value.getDocuments()) {
+                if (doc.exists()) {
+                    roomList.add(doc.getData());
+                }
+            }
+            roomAdapter.notifyDataSetChanged(); // Screen update karo
+        });
     }
 
     // Naya Room Banane ka Popup
@@ -87,7 +124,8 @@ public class HomeActivity extends AppCompatActivity {
                 Toast.makeText(HomeActivity.this, "Creating Room...", Toast.LENGTH_SHORT).show();
                 btnSubmitRoom.setEnabled(false);
 
-                db.collection("Rooms").document(hostId + "_" + roomType)
+                // Document ID room name banaya hai taaki unique rahe aur same naam ka dobara na bane
+                db.collection("Rooms").document(roomName)
                     .set(roomData)
                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override
@@ -108,21 +146,6 @@ public class HomeActivity extends AppCompatActivity {
                     });
             }
         });
-
         dialog.show();
-    }
-
-    // Dummy Button Clicks
-    public void joinRoom(View view) {
-        String roomName = "Chat Room";
-        int id = view.getId();
-        if (id == R.id.btnJoinLoveTalk) roomName = "Love Talk 💕";
-        else if (id == R.id.btnJoinVibe) roomName = "Vibe and Chill 🎵";
-        else if (id == R.id.btnJoinFlirt) roomName = "Flirting Zone 🔥";
-        else if (id == R.id.btnJoinConnect) roomName = "Let's Connect 👋";
-
-        Intent intent = new Intent(HomeActivity.this, ChatroomActivity.class);
-        intent.putExtra("ROOM_NAME", roomName);
-        startActivity(intent);
     }
 }
