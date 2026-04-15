@@ -5,36 +5,62 @@
     android:orientation="vertical"
     android:gravity="center"
     android:background="#121212"
-    android:padding="20dp">
+    android:padding="30dp">
 
+    <!-- App Ka Naam -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Secure Dating"
-        android:textColor="#FFFFFF"
-        android:textSize="28sp"
+        android:textColor="#E91E63"
+        android:textSize="32sp"
         android:textStyle="bold"
-        android:layout_marginBottom="30dp"/>
+        android:layout_marginBottom="40dp"/>
 
-    <!-- Ye raha wo button jo computer ko nahi mil raha tha -->
-    <Button
-        android:id="@+id/btnConnect"
+    <!-- Email Box -->
+    <EditText
+        android:id="@+id/etEmail"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:text="Connect to Server"
+        android:hint="Email Address"
+        android:textColorHint="#888888"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="#E91E63"
+        android:inputType="textEmailAddress"
+        android:layout_marginBottom="20dp"/>
+
+    <!-- Password Box -->
+    <EditText
+        android:id="@+id/etPassword"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:hint="Password (Min 6 letters)"
+        android:textColorHint="#888888"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="#E91E63"
+        android:inputType="textPassword"
+        android:layout_marginBottom="40dp"/>
+
+    <!-- Login Button -->
+    <Button
+        android:id="@+id/btnLogin"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="LOGIN"
         android:backgroundTint="#E91E63"
         android:textColor="#FFFFFF"
         android:textSize="18sp"
-        android:layout_marginBottom="20dp"/>
+        android:textStyle="bold"
+        android:layout_marginBottom="15dp"/>
 
-    <!-- Ye raha wo text jo computer ko nahi mil raha tha -->
-    <TextView
-        android:id="@+id/tvStatus"
+    <!-- Signup Button -->
+    <Button
+        android:id="@+id/btnSignup"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Status: Waiting..."
-        android:textColor="#AAAAAA"
-        android:textSize="16sp"
-        android:gravity="center"/>
+        android:layout_height="60dp"
+        android:text="CREATE NEW ACCOUNT"
+        android:backgroundTint="#333333"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"/>
 
 </LinearLayout>
