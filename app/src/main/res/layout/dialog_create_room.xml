@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_card"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Create New Room 🏠"
+        android:textColor="#FFFFFF"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:layout_gravity="center"
+        android:layout_marginBottom="20dp"/>
+
+    <EditText
+        android:id="@+id/etRoomName"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:hint="Room Name (e.g. My Party Room)"
+        android:textColorHint="#888888"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="#E91E63"
+        android:inputType="text"
+        android:layout_marginBottom="15dp"/>
+
+    <RadioGroup
+        android:id="@+id/rgRoomType"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="20dp">
+        
+        <RadioButton
+            android:id="@+id/rbVoice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Voice (8 Seats)"
+            android:textColor="#FFFFFF"
+            android:buttonTint="#E91E63"
+            android:checked="true"
+            android:layout_marginRight="20dp"/>
+
+        <RadioButton
+            android:id="@+id/rbVideo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Video (4 Seats)"
+            android:buttonTint="#2196F3"
+            android:textColor="#FFFFFF"/>
+    </RadioGroup>
+
+    <Button
+        android:id="@+id/btnSubmitRoom"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:text="CREATE NOW"
+        android:backgroundTint="#E91E63"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"/>
+</LinearLayout>
