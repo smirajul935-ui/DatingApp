@@ -5,6 +5,8 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:7.4.2'
+        // Ye line Firebase ko app se jodegi
+        classpath 'com.google.gms:google-services:4.4.0' 
     }
 }
 allprojects {
