@@ -21,22 +21,25 @@ public class HomeActivity extends AppCompatActivity {
         btnMessages = findViewById(R.id.btnMessages);
         btnProfile = findViewById(R.id.btnProfile);
 
-        // Left Top Corner (Message Box) click hone par
-        btnMessages.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(HomeActivity.this, "Opening Messages...", Toast.LENGTH_SHORT).show();
-                // Aage chalkar hum yaha "Message Activity" open karenge
-            }
-        });
+        // Agar buttons successfully find ho gaye, tabhi unpe click listener lagega
+        if (btnMessages != null) {
+            btnMessages.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(HomeActivity.this, "Opening Messages...", Toast.LENGTH_SHORT).show();
+                    // Aage chalkar hum yaha "Message Activity" open karenge
+                }
+            });
+        }
 
-        // Right Top Corner (Profile) click hone par
-        btnProfile.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(HomeActivity.this, "Opening Profile Settings...", Toast.LENGTH_SHORT).show();
-                // Aage chalkar hum yaha "Profile Activity" open karenge
-            }
-        });
+        if (btnProfile != null) {
+            btnProfile.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(HomeActivity.this, "Opening Profile Settings...", Toast.LENGTH_SHORT).show();
+                    // Aage chalkar hum yaha "Profile Activity" open karenge
+                }
+            });
+        }
     }
 }
