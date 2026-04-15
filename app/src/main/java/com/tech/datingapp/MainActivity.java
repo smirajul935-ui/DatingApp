@@ -1,5 +1,6 @@
 package com.tech.datingapp;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -13,8 +14,6 @@ public class MainActivity extends AppCompatActivity {
 
     EditText etEmail, etPassword;
     Button btnLogin, btnSignup;
-    
-    // Firebase Auth ka variable
     FirebaseAuth mAuth;
 
     @Override
@@ -22,7 +21,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Firebase start karna
         mAuth = FirebaseAuth.getInstance();
 
         etEmail = findViewById(R.id.etEmail);
@@ -30,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
         btnLogin = findViewById(R.id.btnLogin);
         btnSignup = findViewById(R.id.btnSignup);
 
-        // 1. SIGNUP BUTTON KA CODE (Naya account banana)
+        // SIGNUP BUTTON
         btnSignup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -48,6 +46,10 @@ public class MainActivity extends AppCompatActivity {
                         .addOnCompleteListener(task -> {
                             if (task.isSuccessful()) {
                                 Toast.makeText(MainActivity.this, "Signup Successful! ✅", Toast.LENGTH_LONG).show();
+                                // Nayi screen par jana
+                                Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                                startActivity(intent);
+                                finish();
                             } else {
                                 Toast.makeText(MainActivity.this, "Error: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                             }
@@ -55,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // 2. LOGIN BUTTON KA CODE (Purane account se login)
+        // LOGIN BUTTON
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -73,6 +75,10 @@ public class MainActivity extends AppCompatActivity {
                         .addOnCompleteListener(task -> {
                             if (task.isSuccessful()) {
                                 Toast.makeText(MainActivity.this, "Login Successful! 🎉", Toast.LENGTH_LONG).show();
+                                // Nayi screen par jana
+                                Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                                startActivity(intent);
+                                finish();
                             } else {
                                 Toast.makeText(MainActivity.this, "Login Failed! Wrong Password?", Toast.LENGTH_LONG).show();
                             }
