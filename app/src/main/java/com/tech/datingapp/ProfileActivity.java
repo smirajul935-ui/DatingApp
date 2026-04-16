@@ -28,8 +28,6 @@ public class ProfileActivity extends AppCompatActivity {
     FirebaseAuth mAuth;
     FirebaseFirestore db;
     String currentUserId;
-    
-    // Abhi ek simple URL set kiya hai, baad me hum custom avatar array lagayenge
     String currentAvatarUrl = "default_avatar"; 
 
     @Override
@@ -53,13 +51,12 @@ public class ProfileActivity extends AppCompatActivity {
         rbFemale = findViewById(R.id.rbFemale);
         btnSaveProfile = findViewById(R.id.btnSaveProfile);
 
-        // Dummy Click to change Avatar
+        // Click to change Avatar
         ivAvatar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(ProfileActivity.this, "Avatar list opening...", Toast.LENGTH_SHORT).show();
-                // Aage chalkar yaha 10-12 avatars ki list khulegi choose karne ke liye
-                currentAvatarUrl = "new_avatar_link";
+                Toast.makeText(ProfileActivity.this, "Avatar List will open here", Toast.LENGTH_SHORT).show();
+                // Hum baad me yahan ek dialog lagayenge
             }
         });
 
@@ -84,14 +81,13 @@ public class ProfileActivity extends AppCompatActivity {
                 btnSaveProfile.setEnabled(false);
                 btnSaveProfile.setText("Saving...");
 
-                // Firebase me User ka Data save karna
                 db.collection("Users").document(currentUserId)
                     .set(userProfile)
                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override
                         public void onSuccess(Void aVoid) {
                             Toast.makeText(ProfileActivity.this, "Profile Saved Successfully! ✅", Toast.LENGTH_LONG).show();
-                            finish(); // Save hone ke baad wapas Home par
+                            finish(); // Save hone ke baad wapas pichle page pe jayega
                         }
                     })
                     .addOnFailureListener(new OnFailureListener() {
