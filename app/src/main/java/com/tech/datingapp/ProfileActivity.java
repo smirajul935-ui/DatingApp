@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.HashMap;
@@ -50,6 +51,9 @@ public class ProfileActivity extends AppCompatActivity {
         rbMale = findViewById(R.id.rbMale);
         rbFemale = findViewById(R.id.rbFemale);
         btnSaveProfile = findViewById(R.id.btnSaveProfile);
+
+        // 🔥 FIREBASE SE PURANA DATA LAO AUR SCREEN PAR DIKHAO
+        loadUserProfile();
 
         if(ivAvatar != null) {
             ivAvatar.setOnClickListener(new View.OnClickListener() {
@@ -101,5 +105,28 @@ public class ProfileActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+    // Naya Function: Firebase se data padhne ke liye
+    private void loadUserProfile() {
+        db.collection("Users").document(currentUserId).get()
+            .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+                @Override
+                public void onSuccess(DocumentSnapshot documentSnapshot) {
+                    if (documentSnapshot.exists()) {
+                        String savedName = documentSnapshot.getString("userName");
+                        String savedGender = documentSnapshot.getString("gender");
+
+                        if (savedName != null) {
+                            etUserName.setText(savedName);
+                        }
+                        if (savedGender != null && savedGender.equals("Female")) {
+                            rbFemale.setChecked(true);
+                        } else {
+                            rbMale.setChecked(true);
+                        }
+                    }
+                }
+            });
     }
 }
