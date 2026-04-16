@@ -17,8 +17,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -37,6 +39,7 @@ public class HomeActivity extends AppCompatActivity {
 
     FirebaseAuth mAuth;
     FirebaseFirestore db;
+    String currentUserId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,18 +49,22 @@ public class HomeActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
 
+        if (mAuth.getCurrentUser() != null) {
+            currentUserId = mAuth.getCurrentUser().getUid();
+        } else {
+            currentUserId = "Guest";
+        }
+
         btnMessages = findViewById(R.id.btnMessages);
         btnProfile = findViewById(R.id.btnProfile);
         btnCreateRoom = findViewById(R.id.btnCreateRoom);
         
-        // RecyclerView Setup
         rvRooms = findViewById(R.id.rvRooms);
         rvRooms.setLayoutManager(new LinearLayoutManager(this));
         roomList = new ArrayList<>();
         roomAdapter = new RoomAdapter(this, roomList);
         rvRooms.setAdapter(roomAdapter);
 
-        // Fetch Rooms from Firebase
         fetchRoomsFromFirebase();
 
         // CREATE ROOM BUTTON CLICK
@@ -65,13 +72,29 @@ public class HomeActivity extends AppCompatActivity {
             btnCreateRoom.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    showCreateRoomDialog();
+                    checkIfUserAlreadyHasRoom();
                 }
             });
         }
     }
 
-    // 🔥 FIREBASE SE REAL ROOMS NIKALNA
+    // 🚨 FIREBASE SE CHECK KARO KYA USER KA ROOM PEHLE SE HAI
+    private void checkIfUserAlreadyHasRoom() {
+        db.collection("Rooms").whereEqualTo("hostId", currentUserId).get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful() && task.getResult() != null && !task.getResult().isEmpty()) {
+                            // Agar result mila matlab user ka room already hai
+                            Toast.makeText(HomeActivity.this, "Aap ek hi room create kar sakte hain!", Toast.LENGTH_LONG).show();
+                        } else {
+                            // Agar nahi hai toh dialog kholo
+                            showCreateRoomDialog();
+                        }
+                    }
+                });
+    }
+
     private void fetchRoomsFromFirebase() {
         db.collection("Rooms").addSnapshotListener((value, error) -> {
             if (error != null || value == null) {
@@ -79,17 +102,16 @@ public class HomeActivity extends AppCompatActivity {
                 return;
             }
             
-            roomList.clear(); // Purani list saaf karo
+            roomList.clear(); 
             for (DocumentSnapshot doc : value.getDocuments()) {
                 if (doc.exists()) {
                     roomList.add(doc.getData());
                 }
             }
-            roomAdapter.notifyDataSetChanged(); // Screen update karo
+            roomAdapter.notifyDataSetChanged(); 
         });
     }
 
-    // Naya Room Banane ka Popup
     private void showCreateRoomDialog() {
         final Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.dialog_create_room);
@@ -110,22 +132,18 @@ public class HomeActivity extends AppCompatActivity {
                 }
 
                 final String roomType = rbVoice.isChecked() ? "Voice" : "Video";
-                String hostId = "Guest";
-                if(mAuth.getCurrentUser() != null) {
-                    hostId = mAuth.getCurrentUser().getUid();
-                }
 
                 Map<String, Object> roomData = new HashMap<>();
                 roomData.put("roomName", roomName);
                 roomData.put("roomType", roomType);
-                roomData.put("hostId", hostId);
+                roomData.put("hostId", currentUserId);
                 roomData.put("onlineCount", 1);
                 
                 Toast.makeText(HomeActivity.this, "Creating Room...", Toast.LENGTH_SHORT).show();
                 btnSubmitRoom.setEnabled(false);
 
-                // Document ID room name banaya hai taaki unique rahe aur same naam ka dobara na bane
-                db.collection("Rooms").document(roomName)
+                // Document ID user ki ID se banayenge taaki 1 hi bane
+                db.collection("Rooms").document(currentUserId)
                     .set(roomData)
                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override
