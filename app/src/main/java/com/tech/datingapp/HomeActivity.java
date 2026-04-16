@@ -67,7 +67,6 @@ public class HomeActivity extends AppCompatActivity {
 
         fetchRoomsFromFirebase();
 
-        // CREATE ROOM BUTTON CLICK
         if (btnCreateRoom != null) {
             btnCreateRoom.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -76,19 +75,35 @@ public class HomeActivity extends AppCompatActivity {
                 }
             });
         }
+
+        if (btnProfile != null) {
+            btnProfile.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(HomeActivity.this, ProfileActivity.class);
+                    startActivity(intent);
+                }
+            });
+        }
+        
+        if (btnMessages != null) {
+            btnMessages.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(HomeActivity.this, "Opening Messages... (Coming Soon)", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 
-    // 🚨 FIREBASE SE CHECK KARO KYA USER KA ROOM PEHLE SE HAI
     private void checkIfUserAlreadyHasRoom() {
         db.collection("Rooms").whereEqualTo("hostId", currentUserId).get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful() && task.getResult() != null && !task.getResult().isEmpty()) {
-                            // Agar result mila matlab user ka room already hai
                             Toast.makeText(HomeActivity.this, "Aap ek hi room create kar sakte hain!", Toast.LENGTH_LONG).show();
                         } else {
-                            // Agar nahi hai toh dialog kholo
                             showCreateRoomDialog();
                         }
                     }
@@ -142,7 +157,6 @@ public class HomeActivity extends AppCompatActivity {
                 Toast.makeText(HomeActivity.this, "Creating Room...", Toast.LENGTH_SHORT).show();
                 btnSubmitRoom.setEnabled(false);
 
-                // Document ID user ki ID se banayenge taaki 1 hi bane
                 db.collection("Rooms").document(currentUserId)
                     .set(roomData)
                     .addOnSuccessListener(new OnSuccessListener<Void>() {
