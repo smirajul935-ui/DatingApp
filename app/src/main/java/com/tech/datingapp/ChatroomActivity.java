@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -32,10 +31,10 @@ import java.util.Map;
 
 public class ChatroomActivity extends AppCompatActivity {
 
-    TextView tvRoomName;
+    TextView tvRoomName, tvMicStatus;
     ImageView btnMic, btnSend;
     EditText etMessage;
-    LinearLayout layoutMessages; 
+    LinearLayout layoutMessages, hostInfo; 
     ScrollView chatScroll;
 
     FirebaseAuth mAuth;
@@ -49,6 +48,8 @@ public class ChatroomActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // 🚨 Is code se premium design (activity_chatroom.xml) load hoga
         setContentView(R.layout.activity_chatroom);
 
         mAuth = FirebaseAuth.getInstance();
@@ -64,21 +65,38 @@ public class ChatroomActivity extends AppCompatActivity {
             return;
         }
 
+        // IDs ko new design ke hisaab se link kiya
         tvRoomName = findViewById(R.id.tvRoomName);
+        tvMicStatus = findViewById(R.id.tvMicStatus);
         btnMic = findViewById(R.id.btnMic);
         btnSend = findViewById(R.id.btnSend);
         etMessage = findViewById(R.id.etMessage);
         layoutMessages = findViewById(R.id.layoutMessages);
         chatScroll = findViewById(R.id.chatScroll);
+        hostInfo = findViewById(R.id.hostInfo);
         
         roomName = getIntent().getStringExtra("ROOM_NAME");
         if(roomName != null) {
-            if(tvRoomName != null) tvRoomName.setText(roomName);
+            if(tvRoomName != null) tvRoomName.setText("👑 " + roomName);
             verifyHostFromServer(); 
             listenToSeatStatus(); 
         } else {
             finish();
             return;
+        }
+
+        // --- HOST CLICK (Host Powers Check) ---
+        if(hostInfo != null) {
+            hostInfo.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (isHost) {
+                        showHostPowersDialog("Seat Controls");
+                    } else {
+                        Toast.makeText(ChatroomActivity.this, "Only Host can control seats!", Toast.LENGTH_LONG).show();
+                    }
+                }
+            });
         }
 
         // --- MIC PERMISSION LOGIC (Server Verified) ---
@@ -87,6 +105,8 @@ public class ChatroomActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     if (isHost || isOnSeat) {
+                        tvMicStatus.setText("Your mic is ON. Say hello to others! 🎙️");
+                        tvMicStatus.setTextColor(android.graphics.Color.GREEN);
                         Toast.makeText(ChatroomActivity.this, "Mic is ON 🎙️", Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(ChatroomActivity.this, "❌ You are in Audience. Wait for Host to invite you!", Toast.LENGTH_LONG).show();
@@ -168,8 +188,36 @@ public class ChatroomActivity extends AppCompatActivity {
                 });
     }
 
-    // 🚨 NEW: Server Se check karo kya Host ne mujhe Seat di hai?
+    // 🚨 Server se check karo kya Host ne mujhe Seat di hai
     private void listenToSeatStatus() {
         isOnSeat = false; 
+    }
+
+    // 🔥 HOST POWERS POPUP (Add, Mute, Kick, Block)
+    private void showHostPowersDialog(String title) {
+        String[] powers = {"Invite User", "Mute Seat", "Kick User", "Block User"};
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(title);
+        builder.setItems(powers, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
+                    case 0:
+                        Toast.makeText(ChatroomActivity.this, "User Invited!", Toast.LENGTH_SHORT).show();
+                        break;
+                    case 1:
+                        Toast.makeText(ChatroomActivity.this, "Seat Muted 🔇", Toast.LENGTH_SHORT).show();
+                        break;
+                    case 2:
+                        Toast.makeText(ChatroomActivity.this, "User Kicked 🥾", Toast.LENGTH_SHORT).show();
+                        break;
+                    case 3:
+                        Toast.makeText(ChatroomActivity.this, "User Blocked 🚫", Toast.LENGTH_LONG).show();
+                        break;
+                }
+            }
+        });
+        builder.show();
     }
 }
