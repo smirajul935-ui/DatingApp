@@ -40,6 +40,9 @@ public class HomeActivity extends AppCompatActivity {
     FirebaseAuth mAuth;
     FirebaseFirestore db;
     String currentUserId;
+    
+    // 🔥 Variable to store User's Real Name
+    String myUserName = "User"; 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +54,7 @@ public class HomeActivity extends AppCompatActivity {
 
         if (mAuth.getCurrentUser() != null) {
             currentUserId = mAuth.getCurrentUser().getUid();
+            fetchMyProfileName(); // 🚨 Profile se naam nikalna
         } else {
             currentUserId = "Guest";
         }
@@ -85,15 +89,19 @@ public class HomeActivity extends AppCompatActivity {
                 }
             });
         }
-        
-        if (btnMessages != null) {
-            btnMessages.setOnClickListener(new View.OnClickListener() {
+    }
+
+    // 🔥 Firebase se mera naam lao taaki Room me Host Name ban sake
+    private void fetchMyProfileName() {
+        db.collection("Users").document(currentUserId).get()
+            .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
                 @Override
-                public void onClick(View v) {
-                    Toast.makeText(HomeActivity.this, "Opening Messages... (Coming Soon)", Toast.LENGTH_SHORT).show();
+                public void onSuccess(DocumentSnapshot documentSnapshot) {
+                    if (documentSnapshot.exists() && documentSnapshot.getString("userName") != null) {
+                        myUserName = documentSnapshot.getString("userName");
+                    }
                 }
             });
-        }
     }
 
     private void checkIfUserAlreadyHasRoom() {
@@ -112,10 +120,7 @@ public class HomeActivity extends AppCompatActivity {
 
     private void fetchRoomsFromFirebase() {
         db.collection("Rooms").addSnapshotListener((value, error) -> {
-            if (error != null || value == null) {
-                Toast.makeText(HomeActivity.this, "Failed to load rooms", Toast.LENGTH_SHORT).show();
-                return;
-            }
+            if (error != null || value == null) return;
             
             roomList.clear(); 
             for (DocumentSnapshot doc : value.getDocuments()) {
@@ -152,9 +157,9 @@ public class HomeActivity extends AppCompatActivity {
                 roomData.put("roomName", roomName);
                 roomData.put("roomType", roomType);
                 roomData.put("hostId", currentUserId);
+                roomData.put("hostName", myUserName); // 🚨 HOST KA NAAM DATABASE ME GAYA
                 roomData.put("onlineCount", 1);
                 
-                Toast.makeText(HomeActivity.this, "Creating Room...", Toast.LENGTH_SHORT).show();
                 btnSubmitRoom.setEnabled(false);
 
                 db.collection("Rooms").document(currentUserId)
@@ -162,18 +167,11 @@ public class HomeActivity extends AppCompatActivity {
                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override
                         public void onSuccess(Void aVoid) {
-                            Toast.makeText(HomeActivity.this, roomType + " Room Created Successfully!", Toast.LENGTH_LONG).show();
+                            Toast.makeText(HomeActivity.this, "Room Created!", Toast.LENGTH_SHORT).show();
                             dialog.dismiss();
                             Intent intent = new Intent(HomeActivity.this, ChatroomActivity.class);
                             intent.putExtra("ROOM_NAME", roomName);
                             startActivity(intent);
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Toast.makeText(HomeActivity.this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                            btnSubmitRoom.setEnabled(true);
                         }
                     });
             }
