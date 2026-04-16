@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_dark_main">
+
+    <!-- Top Bar -->
+    <RelativeLayout
+        android:id="@+id/chatHeader"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:background="@color/bg_card_dark"
+        android:paddingHorizontal="16dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:text="Emma"
+            android:textColor="@color/text_white"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <!-- Dummy Messages -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/chatInputLayout"
+        android:layout_below="@+id/chatHeader"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:gravity="bottom">
+
+        <!-- Left Bubble -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_chat_bubble_left"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="12dp"
+            android:text="Hey! Did you join the Voice Room?"
+            android:textColor="@color/text_white"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Right Bubble -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_chat_bubble_right"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="12dp"
+            android:text="Yeah, just got in. It's lit! 🔥"
+            android:textColor="@color/text_white"
+            android:layout_gravity="end"/>
+    </LinearLayout>
+
+    <!-- Input Bar -->
+    <LinearLayout
+        android:id="@+id/chatInputLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:padding="16dp"
+        android:orientation="horizontal">
+        <EditText
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_neon_card"
+            android:hint="Type a message..."
+            android:textColorHint="@color/text_gray"
+            android:paddingHorizontal="16dp"
+            android:textColor="@color/text_white" />
+    </LinearLayout>
+</RelativeLayout>
