@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_main_gradient">
+
+    <!-- Top Bar -->
+    <RelativeLayout
+        android:id="@+id/chatTopBar"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:paddingHorizontal="16dp">
+        
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_centerVertical="true"
+            android:src="@android:drawable/ic_menu_revert"
+            android:tint="@color/text_white"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="Midnight Confessions 🌙"
+            android:textColor="@color/text_white"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <!-- Speakers Grid -->
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/chatTopBar"
+        android:layout_marginTop="20dp"
+        android:columnCount="3"
+        android:alignmentMode="alignMargins"
+        android:paddingHorizontal="20dp">
+
+        <!-- Host Avatar -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:layout_marginBottom="20dp">
+            
+            <ImageView
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:background="@drawable/bg_speaker_glow"
+                android:padding="4dp"
+                android:src="@android:drawable/sym_def_app_icon" />
+                
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Host"
+                android:background="@drawable/bg_gradient_button"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="2dp"
+                android:textColor="@color/text_white"
+                android:textSize="10sp"
+                android:layout_marginTop="-10dp"
+                android:elevation="2dp"/>
+                
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Alex"
+                android:textColor="@color/text_white"
+                android:layout_marginTop="4dp"/>
+        </LinearLayout>
+        <!-- Add more similar avatars here for grid -->
+    </GridLayout>
+
+    <!-- Bottom Controls -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_alignParentBottom="true"
+        android:background="@color/bg_card_dark"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:orientation="horizontal">
+
+        <EditText
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_neon_card"
+            android:hint="Say hi..."
+            android:textColorHint="@color/text_gray"
+            android:paddingHorizontal="16dp"
+            android:textColor="@color/text_white" />
+
+        <TextView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:text="❤️"
+            android:textSize="24sp"
+            android:gravity="center"
+            android:layout_marginLeft="12dp"/>
+
+        <!-- Big Mic Button -->
+        <ImageView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/bg_gradient_button"
+            android:padding="12dp"
+            android:layout_marginLeft="12dp"
+            android:src="@android:drawable/ic_btn_speak_now"
+            android:tint="@color/text_white"/>
+    </LinearLayout>
+</RelativeLayout>
