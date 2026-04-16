@@ -15,6 +15,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentChange;
@@ -37,9 +38,14 @@ public class ChatroomActivity extends AppCompatActivity {
     LinearLayout layoutMessages, hostInfo; 
     ScrollView chatScroll;
 
+    // Seats variables
+    TextView tvSeat1, tvSeat2, tvSeat3, tvSeat4, tvSeat5, tvSeat6, tvSeat7, tvSeat8;
+    ImageView ivSeat1, ivSeat2, ivSeat3, ivSeat4, ivSeat5, ivSeat6, ivSeat7, ivSeat8;
+    LinearLayout seat1, seat2, seat3, seat4, seat5, seat6, seat7, seat8;
+
     FirebaseAuth mAuth;
     FirebaseFirestore db;
-    String roomName, currentUserEmail, currentUserId;
+    String roomName, currentUserEmail, currentUserId, currentUserName;
     
     boolean isHost = false; 
     boolean isOnSeat = false; 
@@ -55,6 +61,7 @@ public class ChatroomActivity extends AppCompatActivity {
         if(mAuth.getCurrentUser() != null) {
             currentUserEmail = mAuth.getCurrentUser().getEmail();
             currentUserId = mAuth.getCurrentUser().getUid();
+            fetchMyProfileName(); // Humara asli naam nikalne ke liye
         } else {
             finish(); 
             return;
@@ -70,6 +77,11 @@ public class ChatroomActivity extends AppCompatActivity {
         chatScroll = findViewById(R.id.chatScroll);
         hostInfo = findViewById(R.id.hostInfo);
         
+        // Seat mappings
+        seat1 = findViewById(R.id.seat1); tvSeat1 = findViewById(R.id.tvSeat1); ivSeat1 = findViewById(R.id.seat1).findViewById(R.id.ivHostAvatar); // Host
+        seat2 = findViewById(R.id.seat2); tvSeat2 = findViewById(R.id.tvSeat2); ivSeat2 = findViewById(R.id.seat2).findViewById(R.id.ivHostAvatar);
+        // Baki seats ko baad me link karenge jab hum "+" logic fully implement karenge
+        
         roomName = getIntent().getStringExtra("ROOM_NAME");
         if(roomName != null) {
             if(tvRoomName != null) tvRoomName.setText("👑 " + roomName);
@@ -79,77 +91,58 @@ public class ChatroomActivity extends AppCompatActivity {
             return;
         }
 
-        // 🚨 TOP CLOSE BUTTON CLICK 
         if(btnClose != null) {
-            btnClose.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    showExitDialog();
-                }
-            });
+            btnClose.setOnClickListener(v -> showExitDialog());
         }
 
-        // --- MIC CLICK ---
         if(btnMic != null) {
-            btnMic.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (isHost || isOnSeat) {
-                        tvMicStatus.setText("Your mic is ON. Say hello to others! 🎙️");
-                        tvMicStatus.setTextColor(android.graphics.Color.GREEN);
-                        btnMic.setColorFilter(android.graphics.Color.GREEN);
-                    } else {
-                        Toast.makeText(ChatroomActivity.this, "❌ You are in Audience. Wait for Host to invite you!", Toast.LENGTH_LONG).show();
-                    }
+            btnMic.setOnClickListener(v -> {
+                if (isHost || isOnSeat) {
+                    tvMicStatus.setText("Your mic is ON. Say hello to others! 🎙️");
+                    tvMicStatus.setTextColor(android.graphics.Color.GREEN);
+                    btnMic.setColorFilter(android.graphics.Color.GREEN);
+                } else {
+                    Toast.makeText(ChatroomActivity.this, "❌ You are in Audience. Wait for Host to invite you!", Toast.LENGTH_LONG).show();
                 }
             });
         }
 
-        // --- SEND MESSAGES ---
+        // --- SEND MESSAGES (Ab UserName bhejega Email nahi) ---
         if(btnSend != null && etMessage != null) {
-            btnSend.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    String message = etMessage.getText().toString().trim();
-                    if(!message.isEmpty()){
-                        etMessage.setText(""); 
-                        Map<String, Object> chatData = new HashMap<>();
-                        chatData.put("sender", currentUserEmail);
-                        chatData.put("message", message);
-                        chatData.put("timestamp", FieldValue.serverTimestamp());
-                        db.collection("Chatrooms").document(roomName).collection("Messages").add(chatData);
-                    }
+            btnSend.setOnClickListener(v -> {
+                String message = etMessage.getText().toString().trim();
+                if(!message.isEmpty()){
+                    etMessage.setText(""); 
+                    Map<String, Object> chatData = new HashMap<>();
+                    // Use actual name if available, else email prefix
+                    String nameToUse = (currentUserName != null && !currentUserName.isEmpty()) ? currentUserName : currentUserEmail.split("@")[0];
+                    chatData.put("senderName", nameToUse);
+                    chatData.put("message", message);
+                    chatData.put("timestamp", FieldValue.serverTimestamp());
+                    db.collection("Chatrooms").document(roomName).collection("Messages").add(chatData);
                 }
             });
         }
 
-        // --- RECEIVE MESSAGES (Live Chat) ---
+        // --- RECEIVE MESSAGES (Asli Naam Dikhayega) ---
         if(layoutMessages != null && chatScroll != null) {
             db.collection("Chatrooms").document(roomName).collection("Messages")
                     .orderBy("timestamp", Query.Direction.ASCENDING)
-                    .addSnapshotListener(new EventListener<QuerySnapshot>() {
-                        @Override
-                        public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
-                            if (error != null || value == null) return;
-                            for (DocumentChange dc : value.getDocumentChanges()) {
-                                if (dc.getType() == DocumentChange.Type.ADDED) {
-                                    String msgText = dc.getDocument().getString("message");
-                                    String sender = dc.getDocument().getString("sender");
-                                    if (msgText != null && sender != null) {
-                                        TextView newMsg = new TextView(ChatroomActivity.this);
-                                        String shortName = sender.split("@")[0];
-                                        newMsg.setText(shortName + ": " + msgText);
-                                        newMsg.setTextColor(android.graphics.Color.WHITE);
-                                        newMsg.setTextSize(16f);
-                                        newMsg.setPadding(0, 0, 0, 20);
-                                        layoutMessages.addView(newMsg);
-                                        chatScroll.post(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                chatScroll.fullScroll(View.FOCUS_DOWN);
-                                            }
-                                        });
-                                    }
+                    .addSnapshotListener((value, error) -> {
+                        if (error != null || value == null) return;
+                        for (DocumentChange dc : value.getDocumentChanges()) {
+                            if (dc.getType() == DocumentChange.Type.ADDED) {
+                                String msgText = dc.getDocument().getString("message");
+                                String senderName = dc.getDocument().getString("senderName"); // Email ki jagah Name
+                                
+                                if (msgText != null && senderName != null) {
+                                    TextView newMsg = new TextView(ChatroomActivity.this);
+                                    newMsg.setText(senderName + ": " + msgText);
+                                    newMsg.setTextColor(android.graphics.Color.WHITE);
+                                    newMsg.setTextSize(16f);
+                                    newMsg.setPadding(0, 0, 0, 20);
+                                    layoutMessages.addView(newMsg);
+                                    chatScroll.post(() -> chatScroll.fullScroll(View.FOCUS_DOWN));
                                 }
                             }
                         }
@@ -157,28 +150,60 @@ public class ChatroomActivity extends AppCompatActivity {
         }
     }
 
+    private void fetchMyProfileName() {
+        db.collection("Users").document(currentUserId).get()
+            .addOnSuccessListener(documentSnapshot -> {
+                if (documentSnapshot.exists() && documentSnapshot.getString("userName") != null) {
+                    currentUserName = documentSnapshot.getString("userName");
+                }
+            });
+    }
+
     private void verifyHostFromServer() {
         db.collection("Rooms").whereEqualTo("roomName", roomName).get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful() && task.getResult() != null && !task.getResult().isEmpty()) {
-                            DocumentSnapshot document = task.getResult().getDocuments().get(0);
-                            String serverHostId = document.getString("hostId");
-                            if (serverHostId != null && serverHostId.equals(currentUserId)) {
-                                isHost = true;
-                            } else {
-                                isHost = false;
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && task.getResult() != null && !task.getResult().isEmpty()) {
+                        DocumentSnapshot document = task.getResult().getDocuments().get(0);
+                        String serverHostId = document.getString("hostId");
+                        String serverHostName = document.getString("hostName"); 
+
+                        if (serverHostId != null && serverHostId.equals(currentUserId)) {
+                            isHost = true;
+                            isOnSeat = true; // Host hamesha seat par hota hai
+                            
+                            // Host ko Seat 1 par lagao
+                            if(tvSeat1 != null) {
+                                tvSeat1.setText(currentUserName != null ? currentUserName : "You (Host)");
+                                tvSeat1.setTextColor(android.graphics.Color.parseColor("#E91E63"));
+                            }
+                            
+                            // Seat 2 par '+' dikhao
+                            if(tvSeat2 != null) {
+                                tvSeat2.setText("+ Invite");
+                                tvSeat2.setTextColor(android.graphics.Color.parseColor("#2196F3"));
+                            }
+                        } else {
+                            isHost = false;
+                            isOnSeat = false;
+                            
+                            // Audience ke liye Host ka naam dikhao Seat 1 par
+                            if(tvSeat1 != null && serverHostName != null) {
+                                tvSeat1.setText(serverHostName);
+                            }
+                            
+                            // Audience ke liye Seat 2 par 'Request' dikhao
+                            if(tvSeat2 != null) {
+                                tvSeat2.setText("Request");
+                                tvSeat2.setTextColor(android.graphics.Color.parseColor("#FFC107"));
                             }
                         }
                     }
                 });
     }
 
-    // 🚨 BACK BUTTON AUR CLOSE BUTTON KA LOGIC
     @Override
     public void onBackPressed() {
-        showExitDialog(); // Phone ka back button dabane pe bhi ye popup aayega
+        showExitDialog(); 
     }
 
     private void showExitDialog() {
@@ -186,21 +211,8 @@ public class ChatroomActivity extends AppCompatActivity {
         builder.setTitle("Exit Chat?");
         builder.setMessage("Do you want to minimize the chat or exit completely?");
         
-        builder.setPositiveButton("Exit", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                finish(); // Room band ho jayega
-            }
-        });
-
-        builder.setNegativeButton("Minimize", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                // Minimize logic (App home me chala jayega par room background me chalega)
-                moveTaskToBack(true);
-            }
-        });
-
+        builder.setPositiveButton("Exit", (dialog, which) -> finish());
+        builder.setNegativeButton("Minimize", (dialog, which) -> moveTaskToBack(true));
         builder.setNeutralButton("Cancel", null);
         builder.show();
     }
