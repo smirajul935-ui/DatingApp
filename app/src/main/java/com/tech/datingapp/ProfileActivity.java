@@ -51,54 +51,55 @@ public class ProfileActivity extends AppCompatActivity {
         rbFemale = findViewById(R.id.rbFemale);
         btnSaveProfile = findViewById(R.id.btnSaveProfile);
 
-        // Click to change Avatar
-        ivAvatar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(ProfileActivity.this, "Avatar List will open here", Toast.LENGTH_SHORT).show();
-                // Hum baad me yahan ek dialog lagayenge
-            }
-        });
-
-        // Save Profile to Firebase
-        btnSaveProfile.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String userName = etUserName.getText().toString().trim();
-                
-                if (userName.isEmpty()) {
-                    Toast.makeText(ProfileActivity.this, "Please enter your name!", Toast.LENGTH_SHORT).show();
-                    return;
+        if(ivAvatar != null) {
+            ivAvatar.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(ProfileActivity.this, "Avatar selection coming soon", Toast.LENGTH_SHORT).show();
                 }
+            });
+        }
 
-                String gender = rbMale.isChecked() ? "Male" : "Female";
+        if(btnSaveProfile != null && etUserName != null && rbMale != null) {
+            btnSaveProfile.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    String userName = etUserName.getText().toString().trim();
+                    
+                    if (userName.isEmpty()) {
+                        Toast.makeText(ProfileActivity.this, "Please enter your name!", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
 
-                Map<String, Object> userProfile = new HashMap<>();
-                userProfile.put("userName", userName);
-                userProfile.put("gender", gender);
-                userProfile.put("avatarUrl", currentAvatarUrl);
+                    String gender = rbMale.isChecked() ? "Male" : "Female";
 
-                btnSaveProfile.setEnabled(false);
-                btnSaveProfile.setText("Saving...");
+                    Map<String, Object> userProfile = new HashMap<>();
+                    userProfile.put("userName", userName);
+                    userProfile.put("gender", gender);
+                    userProfile.put("avatarUrl", currentAvatarUrl);
 
-                db.collection("Users").document(currentUserId)
-                    .set(userProfile)
-                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                        @Override
-                        public void onSuccess(Void aVoid) {
-                            Toast.makeText(ProfileActivity.this, "Profile Saved Successfully! ✅", Toast.LENGTH_LONG).show();
-                            finish(); // Save hone ke baad wapas pichle page pe jayega
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Toast.makeText(ProfileActivity.this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                            btnSaveProfile.setEnabled(true);
-                            btnSaveProfile.setText("SAVE PROFILE");
-                        }
-                    });
-            }
-        });
+                    btnSaveProfile.setEnabled(false);
+                    btnSaveProfile.setText("Saving...");
+
+                    db.collection("Users").document(currentUserId)
+                        .set(userProfile)
+                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                Toast.makeText(ProfileActivity.this, "Profile Saved Successfully! ✅", Toast.LENGTH_LONG).show();
+                                finish(); 
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Toast.makeText(ProfileActivity.this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                btnSaveProfile.setEnabled(true);
+                                btnSaveProfile.setText("SAVE PROFILE");
+                            }
+                        });
+                }
+            });
+        }
     }
 }
