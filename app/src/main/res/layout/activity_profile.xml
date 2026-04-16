@@ -8,6 +8,7 @@
     android:padding="24dp">
 
     <ImageView
+        android:id="@+id/ivAvatar"
         android:layout_width="120dp"
         android:layout_height="120dp"
         android:layout_marginTop="60dp"
@@ -15,34 +16,55 @@
         android:padding="8dp"
         android:src="@android:drawable/sym_def_app_icon" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <!-- Name Edit Box -->
+    <EditText
+        android:id="@+id/etUserName"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
         android:layout_marginTop="20dp"
-        android:text="Alexender"
-        android:textColor="@color/text_white"
-        android:textSize="28sp"
-        android:textStyle="bold" />
+        android:background="@drawable/bg_neon_card"
+        android:hint="Enter Username"
+        android:textColorHint="@color/text_gray"
+        android:paddingHorizontal="16dp"
+        android:textColor="@color/text_white" />
 
-    <TextView
+    <!-- Gender Selection -->
+    <RadioGroup
+        android:id="@+id/rgGender"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/bg_neon_card"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="6dp"
-        android:text="♂️ Male"
-        android:textColor="@color/neon_blue"
-        android:textSize="14sp" />
+        android:orientation="horizontal"
+        android:layout_marginTop="20dp">
 
-    <TextView
+        <RadioButton
+            android:id="@+id/rbMale"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Male 👨"
+            android:textColor="@color/text_white"
+            android:buttonTint="@color/neon_blue"
+            android:checked="true"
+            android:layout_marginRight="20dp"/>
+
+        <RadioButton
+            android:id="@+id/rbFemale"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Female 👩"
+            android:buttonTint="@color/neon_pink"
+            android:textColor="@color/text_white"/>
+    </RadioGroup>
+
+    <!-- Save Button -->
+    <Button
+        android:id="@+id/btnSaveProfile"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
         android:background="@drawable/bg_gradient_button"
         android:gravity="center"
         android:padding="16dp"
-        android:text="Edit Profile"
+        android:text="Save Profile"
         android:textColor="@color/text_white"
         android:textSize="16sp"
         android:textStyle="bold" />
