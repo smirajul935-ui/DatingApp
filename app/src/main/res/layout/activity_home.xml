@@ -1,125 +1,184 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_main_gradient">
+    android:background="#0A0A1A">
 
-    <!-- Top Bar -->
+    <!-- 🌟 TOP BAR -->
     <RelativeLayout
         android:id="@+id/topBar"
         android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:paddingHorizontal="20dp">
+        android:layout_height="wrap_content"
+        android:padding="20dp"
+        android:layout_marginBottom="10dp">
 
         <ImageView
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:id="@+id/btnMessages"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_alignParentLeft="true"
             android:layout_centerVertical="true"
-            android:background="@drawable/bg_speaker_glow"
-            android:padding="2dp"
-            android:src="@android:drawable/sym_def_app_icon" />
+            android:src="@android:drawable/ic_dialog_email"
+            android:tint="#FFFFFF"/>
 
-        <LinearLayout
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:orientation="horizontal"
-            android:gravity="center">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="VibeChat"
-                android:textColor="@color/text_white"
-                android:textSize="22sp"
-                android:textStyle="bold" />
-            <View
-                android:layout_width="8dp"
-                android:layout_height="8dp"
-                android:layout_marginLeft="6dp"
-                android:background="@drawable/bg_speaker_glow"
-                android:backgroundTint="@color/online_green"/>
-        </LinearLayout>
+            android:text="LiveChat •"
+            android:textColor="#FFFFFF"
+            android:textSize="26sp"
+            android:textStyle="bold"/>
 
         <ImageView
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:id="@+id/btnProfile"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
-            android:src="@android:drawable/ic_dialog_email"
-            app:tint="@color/text_white" />
+            android:background="@drawable/bg_button"
+            android:src="@android:drawable/ic_menu_myplaces"
+            android:tint="#FFFFFF"/>
+
+        <ImageView
+            android:id="@+id/btnCreateRoom"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_toLeftOf="@id/btnProfile"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="15dp"
+            android:background="@drawable/bg_button"
+            android:src="@android:drawable/ic_input_add"
+            android:padding="8dp"
+            android:tint="#FFFFFF"/>
     </RelativeLayout>
 
+    <!-- 📜 SCROLLABLE CONTENT (Voice + Video) -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/topBar"
-        android:clipToPadding="false"
-        android:paddingBottom="80dp">
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="20dp">
+            android:orientation="vertical">
 
-            <!-- Video Chatrooms (Horizontal Slider) -->
+            <!-- Title: Voice Chatrooms -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Video Chatrooms 📹"
-                android:textColor="@color/text_white"
-                android:textSize="18sp"
+                android:text="Active Chatrooms"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="12dp"/>
+                android:layout_marginLeft="20dp"
+                android:layout_marginBottom="10dp"/>
 
+            <!-- 🔥 DYNAMIC RECYCLERVIEW (Firebase se aayenge tumhare create kiye hue rooms) -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvRooms"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false" />
+
+            <!-- Title: Video Chatrooms -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Video Chatrooms"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="15dp"/>
+
+            <!-- ⬅️ HORIZONTAL VIDEO SLIDE ➡️ -->
             <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:scrollbars="none"
-                android:layout_marginBottom="24dp">
+                android:paddingHorizontal="20dp"
+                android:layout_marginBottom="30dp">
+
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
-                    <!-- Dummy Video Cards -->
-                    <include layout="@layout/item_video_room" />
-                    <include layout="@layout/item_video_room" />
+
+                    <!-- 🔥 VIDEO CARD 1 -->
+                    <RelativeLayout
+                        android:layout_width="220dp"
+                        android:layout_height="130dp"
+                        android:background="@drawable/bg_card"
+                        android:padding="15dp"
+                        android:layout_marginRight="15dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Flirting Zone 🔥"
+                            android:textColor="#FFFFFF"
+                            android:textSize="18sp"
+                            android:textStyle="bold"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentBottom="true"
+                            android:text="20 online"
+                            android:textColor="#AAAAAA"/>
+
+                        <Button
+                            android:layout_width="80dp"
+                            android:layout_height="40dp"
+                            android:layout_alignParentRight="true"
+                            android:layout_alignParentBottom="true"
+                            android:background="@drawable/bg_button"
+                            android:text="Join"
+                            android:textColor="#FFFFFF"
+                            android:textAllCaps="false"/>
+                    </RelativeLayout>
+
+                    <!-- 👋 VIDEO CARD 2 -->
+                    <RelativeLayout
+                        android:layout_width="220dp"
+                        android:layout_height="130dp"
+                        android:background="@drawable/bg_card"
+                        android:padding="15dp"
+                        android:layout_marginRight="15dp">
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Let's Connect 👋"
+                            android:textColor="#FFFFFF"
+                            android:textSize="18sp"
+                            android:textStyle="bold"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentBottom="true"
+                            android:text="26 online"
+                            android:textColor="#AAAAAA"/>
+
+                        <Button
+                            android:layout_width="80dp"
+                            android:layout_height="40dp"
+                            android:layout_alignParentRight="true"
+                            android:layout_alignParentBottom="true"
+                            android:background="@drawable/bg_button"
+                            android:text="Join"
+                            android:textColor="#FFFFFF"
+                            android:textAllCaps="false"/>
+                    </RelativeLayout>
+
                 </LinearLayout>
             </HorizontalScrollView>
-
-            <!-- Voice Chatrooms -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Hot Voice Rooms 🔥"
-                android:textColor="@color/text_white"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="12dp"/>
-
-            <!-- Dummy Voice Cards -->
-            <include layout="@layout/item_voice_room" />
-            <include layout="@layout/item_voice_room" />
-            <include layout="@layout/item_voice_room" />
-
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
-
-    <!-- Floating Create Button -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="24dp"
-        android:background="@drawable/bg_gradient_button"
-        android:paddingHorizontal="24dp"
-        android:paddingVertical="14dp"
-        android:text="+ Create Room"
-        android:textColor="@color/text_white"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:elevation="8dp"/>
 
 </RelativeLayout>
