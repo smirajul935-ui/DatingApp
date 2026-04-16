@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -33,7 +32,7 @@ import java.util.Map;
 public class ChatroomActivity extends AppCompatActivity {
 
     TextView tvRoomName, tvMicStatus;
-    ImageView btnMic, btnSend;
+    ImageView btnMic, btnSend, btnClose;
     EditText etMessage;
     LinearLayout layoutMessages, hostInfo; 
     ScrollView chatScroll;
@@ -65,6 +64,7 @@ public class ChatroomActivity extends AppCompatActivity {
         tvMicStatus = findViewById(R.id.tvMicStatus);
         btnMic = findViewById(R.id.btnMic);
         btnSend = findViewById(R.id.btnSend);
+        btnClose = findViewById(R.id.btnClose);
         etMessage = findViewById(R.id.etMessage);
         layoutMessages = findViewById(R.id.layoutMessages);
         chatScroll = findViewById(R.id.chatScroll);
@@ -72,25 +72,24 @@ public class ChatroomActivity extends AppCompatActivity {
         
         roomName = getIntent().getStringExtra("ROOM_NAME");
         if(roomName != null) {
+            if(tvRoomName != null) tvRoomName.setText("👑 " + roomName);
             verifyHostFromServer(); 
         } else {
             finish();
             return;
         }
 
-        if(hostInfo != null) {
-            hostInfo.setOnClickListener(new View.OnClickListener() {
+        // 🚨 TOP CLOSE BUTTON CLICK 
+        if(btnClose != null) {
+            btnClose.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (isHost) {
-                        showHostPowersDialog("Seat Controls");
-                    } else {
-                        Toast.makeText(ChatroomActivity.this, "Only Host can control seats!", Toast.LENGTH_LONG).show();
-                    }
+                    showExitDialog();
                 }
             });
         }
 
+        // --- MIC CLICK ---
         if(btnMic != null) {
             btnMic.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -98,7 +97,7 @@ public class ChatroomActivity extends AppCompatActivity {
                     if (isHost || isOnSeat) {
                         tvMicStatus.setText("Your mic is ON. Say hello to others! 🎙️");
                         tvMicStatus.setTextColor(android.graphics.Color.GREEN);
-                        Toast.makeText(ChatroomActivity.this, "Mic is ON 🎙️", Toast.LENGTH_SHORT).show();
+                        btnMic.setColorFilter(android.graphics.Color.GREEN);
                     } else {
                         Toast.makeText(ChatroomActivity.this, "❌ You are in Audience. Wait for Host to invite you!", Toast.LENGTH_LONG).show();
                     }
@@ -106,6 +105,7 @@ public class ChatroomActivity extends AppCompatActivity {
             });
         }
 
+        // --- SEND MESSAGES ---
         if(btnSend != null && etMessage != null) {
             btnSend.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -123,6 +123,7 @@ public class ChatroomActivity extends AppCompatActivity {
             });
         }
 
+        // --- RECEIVE MESSAGES (Live Chat) ---
         if(layoutMessages != null && chatScroll != null) {
             db.collection("Chatrooms").document(roomName).collection("Messages")
                     .orderBy("timestamp", Query.Direction.ASCENDING)
@@ -156,7 +157,6 @@ public class ChatroomActivity extends AppCompatActivity {
         }
     }
 
-    // 🚨 FIREBASE SE HOST KA NAAM NIKALNA
     private void verifyHostFromServer() {
         db.collection("Rooms").whereEqualTo("roomName", roomName).get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
@@ -165,20 +165,8 @@ public class ChatroomActivity extends AppCompatActivity {
                         if (task.isSuccessful() && task.getResult() != null && !task.getResult().isEmpty()) {
                             DocumentSnapshot document = task.getResult().getDocuments().get(0);
                             String serverHostId = document.getString("hostId");
-                            String serverHostName = document.getString("hostName"); // 🔥 Host ka naam nikala
-
-                            // Screen par Room Name (by HostName) set kiya
-                            if (tvRoomName != null) {
-                                if (serverHostName != null) {
-                                    tvRoomName.setText("👑 " + roomName + " (by " + serverHostName + ")");
-                                } else {
-                                    tvRoomName.setText("👑 " + roomName);
-                                }
-                            }
-
                             if (serverHostId != null && serverHostId.equals(currentUserId)) {
                                 isHost = true;
-                                Toast.makeText(ChatroomActivity.this, "Host Verified Securely ✅", Toast.LENGTH_SHORT).show();
                             } else {
                                 isHost = false;
                             }
@@ -187,21 +175,33 @@ public class ChatroomActivity extends AppCompatActivity {
                 });
     }
 
-    private void showHostPowersDialog(String title) {
-        String[] powers = {"Invite User", "Mute Seat", "Kick User", "Block User"};
+    // 🚨 BACK BUTTON AUR CLOSE BUTTON KA LOGIC
+    @Override
+    public void onBackPressed() {
+        showExitDialog(); // Phone ka back button dabane pe bhi ye popup aayega
+    }
+
+    private void showExitDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(title);
-        builder.setItems(powers, new DialogInterface.OnClickListener() {
+        builder.setTitle("Exit Chat?");
+        builder.setMessage("Do you want to minimize the chat or exit completely?");
+        
+        builder.setPositiveButton("Exit", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                switch (which) {
-                    case 0: Toast.makeText(ChatroomActivity.this, "User Invited!", Toast.LENGTH_SHORT).show(); break;
-                    case 1: Toast.makeText(ChatroomActivity.this, "Seat Muted 🔇", Toast.LENGTH_SHORT).show(); break;
-                    case 2: Toast.makeText(ChatroomActivity.this, "User Kicked 🥾", Toast.LENGTH_SHORT).show(); break;
-                    case 3: Toast.makeText(ChatroomActivity.this, "User Blocked 🚫", Toast.LENGTH_LONG).show(); break;
-                }
+                finish(); // Room band ho jayega
             }
         });
+
+        builder.setNegativeButton("Minimize", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // Minimize logic (App home me chala jayega par room background me chalega)
+                moveTaskToBack(true);
+            }
+        });
+
+        builder.setNeutralButton("Cancel", null);
         builder.show();
     }
 }
