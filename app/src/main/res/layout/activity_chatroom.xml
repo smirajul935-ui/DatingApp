@@ -2,15 +2,15 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121215"> <!-- Dark Blue/Black Theme -->
+    android:background="#121215">
 
-    <!-- 🌟 TOP BAR (Host Info & Mini Seats) -->
+    <!-- 🌟 TOP BAR (Host Info) -->
     <RelativeLayout
         android:id="@+id/topBar"
         android:layout_width="match_parent"
         android:layout_height="80dp"
         android:background="#1E1E28"
-        android:paddingHorizontal="10dp"
+        android:paddingHorizontal="15dp"
         android:paddingVertical="5dp"
         android:elevation="4dp">
 
@@ -42,92 +42,109 @@
                     android:id="@+id/tvRoomName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="👑 No Option..."
+                    android:text="👑 Room Name"
                     android:textColor="#FFD700"
                     android:textSize="16sp"
                     android:textStyle="bold"/>
 
-                <!-- Level Badge -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_button"
                     android:paddingHorizontal="6dp"
                     android:paddingVertical="2dp"
-                    android:text="Lv 12"
+                    android:text="Lv 1"
                     android:textColor="#FFFFFF"
                     android:textSize="10sp"
                     android:layout_marginTop="2dp"/>
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Mini Seats (Top Right) -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <!-- Right Side: Close Button (Will open Minimize/Exit dialog) -->
+        <ImageView
+            android:id="@+id/btnClose"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
-            android:orientation="horizontal">
-
-            <!-- Requests Circle -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:layout_marginRight="10dp">
-                <TextView
-                    android:layout_width="35dp"
-                    android:layout_height="35dp"
-                    android:background="@drawable/bg_round_dark"
-                    android:gravity="center"
-                    android:text="0"
-                    android:textColor="#FFFFFF"
-                    android:textSize="16sp"
-                    android:textStyle="bold"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Request"
-                    android:textColor="#AAAAAA"
-                    android:textSize="10sp"/>
-            </LinearLayout>
-
-            <!-- Locked Seats (Dash line circles) -->
-            <ImageView
-                android:layout_width="35dp"
-                android:layout_height="35dp"
-                android:background="@drawable/bg_round_dark"
-                android:src="@android:drawable/ic_secure"
-                android:tint="#888888"
-                android:padding="8dp"
-                android:layout_marginRight="5dp"/>
-            
-            <ImageView
-                android:layout_width="35dp"
-                android:layout_height="35dp"
-                android:background="@drawable/bg_round_dark"
-                android:src="@android:drawable/ic_secure"
-                android:tint="#888888"
-                android:padding="8dp"
-                android:layout_marginRight="5dp"/>
-                
-            <ImageView
-                android:layout_width="35dp"
-                android:layout_height="35dp"
-                android:background="@drawable/bg_round_dark"
-                android:src="@android:drawable/ic_secure"
-                android:tint="#888888"
-                android:padding="8dp"/>
-        </LinearLayout>
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:tint="#FFFFFF"/>
     </RelativeLayout>
 
-    <!-- 🎙️ MIC INDICATOR BAR -->
+    <!-- 🪑 8 SEATS GRID (2 Rows of 4, Video Jaisa Modern Look) -->
+    <LinearLayout
+        android:id="@+id/seatsLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/topBar"
+        android:orientation="vertical"
+        android:padding="15dp"
+        android:layout_marginTop="10dp">
+
+        <!-- ROW 1 (4 Seats) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="4"
+            android:layout_marginBottom="20dp">
+
+            <LinearLayout android:id="@+id/seat1" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+                <ImageView android:layout_width="60dp" android:layout_height="60dp" android:background="@drawable/bg_round_dark" android:src="@android:drawable/ic_secure" android:tint="#888888" android:padding="15dp"/>
+                <TextView android:id="@+id/tvSeat1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Empty" android:textColor="#888888" android:textSize="12sp" android:layout_marginTop="5dp"/>
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/seat2" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+                <ImageView android:layout_width="60dp" android:layout_height="60dp" android:background="@drawable/bg_round_dark" android:src="@android:drawable/ic_secure" android:tint="#888888" android:padding="15dp"/>
+                <TextView android:id="@+id/tvSeat2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Empty" android:textColor="#888888" android:textSize="12sp" android:layout_marginTop="5dp"/>
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/seat3" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+                <ImageView android:layout_width="60dp" android:layout_height="60dp" android:background="@drawable/bg_round_dark" android:src="@android:drawable/ic_secure" android:tint="#888888" android:padding="15dp"/>
+                <TextView android:id="@+id/tvSeat3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Empty" android:textColor="#888888" android:textSize="12sp" android:layout_marginTop="5dp"/>
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/seat4" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+                <ImageView android:layout_width="60dp" android:layout_height="60dp" android:background="@drawable/bg_round_dark" android:src="@android:drawable/ic_secure" android:tint="#888888" android:padding="15dp"/>
+                <TextView android:id="@+id/tvSeat4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Empty" android:textColor="#888888" android:textSize="12sp" android:layout_marginTop="5dp"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- ROW 2 (4 Seats) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="4">
+
+            <LinearLayout android:id="@+id/seat5" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+                <ImageView android:layout_width="60dp" android:layout_height="60dp" android:background="@drawable/bg_round_dark" android:src="@android:drawable/ic_secure" android:tint="#888888" android:padding="15dp"/>
+                <TextView android:id="@+id/tvSeat5" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Empty" android:textColor="#888888" android:textSize="12sp" android:layout_marginTop="5dp"/>
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/seat6" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+                <ImageView android:layout_width="60dp" android:layout_height="60dp" android:background="@drawable/bg_round_dark" android:src="@android:drawable/ic_secure" android:tint="#888888" android:padding="15dp"/>
+                <TextView android:id="@+id/tvSeat6" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Empty" android:textColor="#888888" android:textSize="12sp" android:layout_marginTop="5dp"/>
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/seat7" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+                <ImageView android:layout_width="60dp" android:layout_height="60dp" android:background="@drawable/bg_round_dark" android:src="@android:drawable/ic_secure" android:tint="#888888" android:padding="15dp"/>
+                <TextView android:id="@+id/tvSeat7" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Empty" android:textColor="#888888" android:textSize="12sp" android:layout_marginTop="5dp"/>
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/seat8" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+                <ImageView android:layout_width="60dp" android:layout_height="60dp" android:background="@drawable/bg_round_dark" android:src="@android:drawable/ic_secure" android:tint="#888888" android:padding="15dp"/>
+                <TextView android:id="@+id/tvSeat8" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Empty" android:textColor="#888888" android:textSize="12sp" android:layout_marginTop="5dp"/>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 🎙️ MIC INDICATOR BAR (Video Jaisa) -->
     <LinearLayout
         android:id="@+id/micIndicator"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/topBar"
+        android:layout_below="@id/seatsLayout"
         android:background="#2A2A35"
         android:padding="8dp"
         android:orientation="horizontal"
@@ -148,14 +165,6 @@
             android:text="Your mic is off. Tap below to speak!"
             android:textColor="#FFFFFF"
             android:textSize="14sp"/>
-            
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="X"
-            android:textColor="#888888"
-            android:textStyle="bold"
-            android:paddingHorizontal="10dp"/>
     </LinearLayout>
 
     <!-- 💬 LIVE CHAT COMMENTS SECTION -->
@@ -168,7 +177,6 @@
         android:padding="10dp"
         android:scrollbars="none">
 
-        <!-- Here messages will appear in modern style via Java -->
         <LinearLayout
             android:id="@+id/layoutMessages"
             android:layout_width="match_parent"
@@ -177,7 +185,7 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- 🎛️ BOTTOM CONTROLS (Input + Gift/Mic icons) -->
+    <!-- 🎛️ BOTTOM CONTROLS -->
     <RelativeLayout
         android:id="@+id/bottomControls"
         android:layout_width="match_parent"
@@ -186,7 +194,6 @@
         android:background="#1E1E28"
         android:padding="10dp">
 
-        <!-- Mic Button (Left) -->
         <ImageView
             android:id="@+id/btnMic"
             android:layout_width="45dp"
@@ -198,7 +205,6 @@
             android:tint="#888888"
             android:padding="10dp"/>
 
-        <!-- Message Input Box -->
         <EditText
             android:id="@+id/etMessage"
             android:layout_width="match_parent"
@@ -214,7 +220,6 @@
             android:paddingHorizontal="15dp"
             android:textSize="14sp"/>
 
-        <!-- Right Icons (Gift, Clipboard, Send) -->
         <LinearLayout
             android:id="@+id/rightIcons"
             android:layout_width="wrap_content"
@@ -226,11 +231,10 @@
             <ImageView
                 android:layout_width="35dp"
                 android:layout_height="35dp"
-                android:src="@android:drawable/ic_menu_agenda"
+                android:src="@android:drawable/ic_menu_share"
                 android:tint="#FFC107"
                 android:layout_marginRight="10dp"/>
 
-            <!-- Send Button -->
             <ImageView
                 android:id="@+id/btnSend"
                 android:layout_width="45dp"
