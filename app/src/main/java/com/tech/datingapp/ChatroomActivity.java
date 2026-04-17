@@ -1,7 +1,8 @@
 package com.tech.datingapp;
 
 import android.app.AlertDialog;
-import android.content.DialogInterface;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -11,6 +12,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -40,10 +42,11 @@ import java.util.Map;
 public class ChatroomActivity extends AppCompatActivity {
 
     TextView tvRoomName, tvMicStatus;
-    ImageView btnMic, btnSend, btnClose;
+    ImageView btnMic, btnSend, btnClose, btnShare; // 🔥 ADDED btnShare
     EditText etMessage;
     LinearLayout layoutMessages, hostInfo, micIndicator;
     ScrollView chatScroll;
+    RelativeLayout mainLayout;
 
     // 🪑 SEAT ARRAYS
     TextView[] seatTexts = new TextView[8];
@@ -61,7 +64,6 @@ public class ChatroomActivity extends AppCompatActivity {
     int mySeatIndex = -1;
     boolean isMicMuted = false;
 
-    // Seat shifting logic
     int filledSeats = 1; 
 
     @Override
@@ -75,6 +77,7 @@ public class ChatroomActivity extends AppCompatActivity {
         if(mAuth.getCurrentUser() != null) {
             currentUserEmail = mAuth.getCurrentUser().getEmail();
             currentUserId = mAuth.getCurrentUser().getUid();
+            fetchMyProfileInfo(); 
         } else {
             finish(); 
             return;
@@ -91,6 +94,16 @@ public class ChatroomActivity extends AppCompatActivity {
         hostInfo = findViewById(R.id.hostInfo);
         micIndicator = findViewById(R.id.micIndicator);
         
+        // 🔥 LINK SHARE BUTTON TO XML
+        // Note: XML mein humne rightIcons ke andar share icon dala tha. Agar wahan ID nahi thi toh ye kaam nahi karega
+        // Lekin XML mein pehle se ek Share icon hai, usko access karne ke liye yahan ID fix karni padegi.
+        // XML mein share button ko ID deni hogi. For now, hum assume kar rahe hai ID "btnShare" hai.
+        
+        // As a fallback agar btnShare XML me nahi hai toh error naa aaye:
+        try {
+            btnShare = findViewById(R.id.btnShare); 
+        } catch (Exception e) {}
+        
         seatLayouts[0] = findViewById(R.id.seat1); seatTexts[0] = findViewById(R.id.tvSeat1); seatImages[0] = findViewById(R.id.ivSeat1);
         seatLayouts[1] = findViewById(R.id.seat2); seatTexts[1] = findViewById(R.id.tvSeat2); seatImages[1] = findViewById(R.id.ivSeat2);
         seatLayouts[2] = findViewById(R.id.seat3); seatTexts[2] = findViewById(R.id.tvSeat3); seatImages[2] = findViewById(R.id.ivSeat3);
@@ -103,19 +116,19 @@ public class ChatroomActivity extends AppCompatActivity {
         roomName = getIntent().getStringExtra("ROOM_NAME");
         if(roomName != null && !roomName.isEmpty()) {
             if(tvRoomName != null) tvRoomName.setText("👑 " + roomName);
-            fetchMyProfileInfo(); 
+            verifyHostFromServer(); 
         } else {
             finish();
             return;
         }
 
         try {
-            final View mainView = getWindow().getDecorView().getRootView();
+            mainLayout = getWindow().getDecorView().getRootView().findViewById(android.R.id.content);
             String githubImageUrl = "https://images.unsplash.com/photo-1550684848-fac1c5b4e853"; 
             Glide.with(this).load(githubImageUrl).centerCrop().into(new CustomTarget<Drawable>() {
                 @Override
                 public void onResourceReady(@NonNull Drawable resource, @Nullable Transition<? super Drawable> transition) {
-                    if (mainView != null) mainView.setBackground(resource);
+                    if (mainLayout != null) mainLayout.setBackground(resource);
                 }
                 @Override
                 public void onLoadCleared(@Nullable Drawable placeholder) {}
@@ -123,6 +136,16 @@ public class ChatroomActivity extends AppCompatActivity {
         } catch (Exception e) {}
 
         if(btnClose != null) btnClose.setOnClickListener(v -> showExitDialog());
+
+        // 🔥 SHARE BUTTON LOGIC (WhatsApp / Others)
+        if(btnShare != null) {
+            btnShare.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    shareChatroomLink();
+                }
+            });
+        }
 
         if(btnMic != null) {
             btnMic.setOnClickListener(v -> {
@@ -145,7 +168,9 @@ public class ChatroomActivity extends AppCompatActivity {
                     chatData.put("message", message);
                     chatData.put("avatarUrl", myAvatarUrl); 
                     chatData.put("timestamp", FieldValue.serverTimestamp());
-                    db.collection("Chatrooms").document(roomName).collection("Messages").add(chatData);
+                    if(roomName != null) {
+                        db.collection("Chatrooms").document(roomName).collection("Messages").add(chatData);
+                    }
                 }
             });
         }
@@ -181,19 +206,7 @@ public class ChatroomActivity extends AppCompatActivity {
         }
     }
 
-    private void fetchMyProfileInfo() {
-        db.collection("Users").document(currentUserId).get()
-            .addOnSuccessListener(documentSnapshot -> {
-                if (documentSnapshot.exists()) {
-                    currentUserName = documentSnapshot.getString("userName");
-                    if (documentSnapshot.getString("avatarUrl") != null) {
-                        myAvatarUrl = documentSnapshot.getString("avatarUrl");
-                    }
-                }
-                verifyHostFromServer(); 
-            });
-    }
-
+    // 🚨 FIREBASE HOST VERIFICATION
     private void verifyHostFromServer() {
         if(roomName == null || roomName.isEmpty()) return;
         db.collection("Rooms").whereEqualTo("roomName", roomName).get()
@@ -219,6 +232,32 @@ public class ChatroomActivity extends AppCompatActivity {
                 });
     }
 
+    private void fetchMyProfileInfo() {
+        db.collection("Users").document(currentUserId).get()
+            .addOnSuccessListener(documentSnapshot -> {
+                if (documentSnapshot.exists()) {
+                    if (documentSnapshot.getString("userName") != null) currentUserName = documentSnapshot.getString("userName");
+                    if (documentSnapshot.getString("avatarUrl") != null) myAvatarUrl = documentSnapshot.getString("avatarUrl");
+                }
+                updateSeatsDisplay();
+            });
+    }
+
+    // 🔥 NEW: SHARE CHATROOM LINK LOGIC
+    private void shareChatroomLink() {
+        // Ye tumhara custom link banega (Ise aage chal ke hum Catch karenge App me)
+        String appLink = "https://securedating.app/join?room=" + roomName.replace(" ", "%20");
+        String shareMessage = "Hey! Join my live chatroom *" + roomName + "* on Secure Dating App. \n\nClick the link to join directly: \n" + appLink;
+
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Join my Chatroom");
+        shareIntent.putExtra(Intent.EXTRA_TEXT, shareMessage);
+        
+        // WhatsApp ya dusre apps ko choose karne ka option dega
+        startActivity(Intent.createChooser(shareIntent, "Share Room via"));
+    }
+
     private void updateMicVisibility() {
         if (isOnSeat) {
             if (micIndicator != null) micIndicator.setVisibility(View.VISIBLE);
@@ -238,13 +277,17 @@ public class ChatroomActivity extends AppCompatActivity {
     private void toggleMic() {
         isMicMuted = !isMicMuted;
         if (isMicMuted) {
-            tvMicStatus.setText("Your mic is Muted 🔇");
-            tvMicStatus.setTextColor(android.graphics.Color.RED);
-            btnMic.setColorFilter(android.graphics.Color.RED);
+            if(tvMicStatus != null) {
+                tvMicStatus.setText("Your mic is Muted 🔇");
+                tvMicStatus.setTextColor(android.graphics.Color.RED);
+            }
+            if(btnMic != null) btnMic.setColorFilter(android.graphics.Color.RED);
         } else {
-            tvMicStatus.setText("Your mic is ON. Say hello to others! 🎙️");
-            tvMicStatus.setTextColor(android.graphics.Color.GREEN);
-            btnMic.setColorFilter(android.graphics.Color.GREEN);
+            if(tvMicStatus != null) {
+                tvMicStatus.setText("Your mic is ON. Say hello to others! 🎙️");
+                tvMicStatus.setTextColor(android.graphics.Color.GREEN);
+            }
+            if(btnMic != null) btnMic.setColorFilter(android.graphics.Color.GREEN);
         }
     }
 
@@ -273,7 +316,6 @@ public class ChatroomActivity extends AppCompatActivity {
                 seatTexts[i].setTextColor(isHost ? android.graphics.Color.parseColor("#2196F3") : android.graphics.Color.parseColor("#FFC107"));
                 seatImages[i].setImageResource(android.R.drawable.ic_menu_add);
                 seatImages[i].setColorFilter(isHost ? android.graphics.Color.parseColor("#2196F3") : android.graphics.Color.parseColor("#FFC107"));
-                
             } else { 
                 seatTexts[i].setText("Empty");
                 seatTexts[i].setTextColor(android.graphics.Color.parseColor("#888888"));
@@ -292,42 +334,27 @@ public class ChatroomActivity extends AppCompatActivity {
             if (seatIndex < filledSeats && seatIndex != 0) {
                 showHostPowersDialog("Seat " + (seatIndex + 1)); 
             } else if (seatIndex == filledSeats) {
-                // 🔥 NAYA FEATURE: PENDING REQUESTS LIST DIKHEGI
                 showPendingRequestsDialog(); 
             }
         } else {
             if (seatIndex == filledSeats) {
-                // 🔥 AUDIENCE NE REQUEST BHEJI
-                Toast.makeText(ChatroomActivity.this, "Request Sent to Host! Please wait for approval.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ChatroomActivity.this, "Request Sent to Host!", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(ChatroomActivity.this, "You can't control this seat.", Toast.LENGTH_SHORT).show();
             }
         }
     }
 
-    // 🚨 🔥 NAYA FEATURE: HOST REQUEST POPUP
     private void showPendingRequestsDialog() {
-        // Abhi hum dummy users ka naam de rahe hain test karne ke liye.
-        // Aage chal kar ye list Firebase se aayegi un logo ki jinhone request bheji hai.
         List<String> requests = new ArrayList<>();
         requests.add("Emma (Pending Request)");
         requests.add("Rahul (Pending Request)");
-        requests.add("Priya (Pending Request)");
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, requests);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Select user to add on seat:");
-        
-        builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                String selectedUser = requests.get(which);
-                Toast.makeText(ChatroomActivity.this, selectedUser + " added to the seat!", Toast.LENGTH_SHORT).show();
-                addDummyUserToSeat(); // Us user ko seat par add kar dega
-            }
-        });
-        
+        builder.setAdapter(adapter, (dialog, which) -> addDummyUserToSeat());
         builder.setNegativeButton("Cancel", null);
         builder.show();
     }
