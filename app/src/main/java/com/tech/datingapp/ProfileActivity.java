@@ -52,7 +52,7 @@ public class ProfileActivity extends AppCompatActivity {
         rbFemale = findViewById(R.id.rbFemale);
         btnSaveProfile = findViewById(R.id.btnSaveProfile);
 
-        // 🔥 FIREBASE SE PURANA DATA LAO AUR SCREEN PAR DIKHAO
+        // 🚨 LOAD PROFILE DATA FROM FIREBASE WHEN OPENED
         loadUserProfile();
 
         if(ivAvatar != null) {
@@ -107,7 +107,7 @@ public class ProfileActivity extends AppCompatActivity {
         }
     }
 
-    // Naya Function: Firebase se data padhne ke liye
+    // 🚨 FIREBASE SE DATA PADH KAR SCREEN PAR SET KARNA
     private void loadUserProfile() {
         db.collection("Users").document(currentUserId).get()
             .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
@@ -117,13 +117,13 @@ public class ProfileActivity extends AppCompatActivity {
                         String savedName = documentSnapshot.getString("userName");
                         String savedGender = documentSnapshot.getString("gender");
 
-                        if (savedName != null) {
+                        if (savedName != null && etUserName != null) {
                             etUserName.setText(savedName);
                         }
                         if (savedGender != null && savedGender.equals("Female")) {
-                            rbFemale.setChecked(true);
+                            if(rbFemale != null) rbFemale.setChecked(true);
                         } else {
-                            rbMale.setChecked(true);
+                            if(rbMale != null) rbMale.setChecked(true);
                         }
                     }
                 }
