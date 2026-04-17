@@ -42,6 +42,7 @@ public class ChatroomActivity extends AppCompatActivity {
     EditText etMessage;
     LinearLayout layoutMessages, hostInfo, micIndicator; 
     ScrollView chatScroll;
+    RelativeLayout mainLayout;
 
     // 🪑 SEAT ARRAYS
     TextView[] seatTexts = new TextView[8];
@@ -51,9 +52,8 @@ public class ChatroomActivity extends AppCompatActivity {
     FirebaseAuth mAuth;
     FirebaseFirestore db;
     String roomName, currentUserEmail, currentUserId, currentUserName;
-    String currentAvatarUrl = "default"; 
+    String currentAvatarUrl = "https://raw.githubusercontent.com/smirajul935/DatingApp/main/avatar.png"; 
     
-    // 🔥 SECURITY VARIABLES
     boolean isHost = false; 
     boolean isOnSeat = false; 
     int mySeatIndex = -1;
@@ -87,6 +87,7 @@ public class ChatroomActivity extends AppCompatActivity {
         chatScroll = findViewById(R.id.chatScroll);
         hostInfo = findViewById(R.id.hostInfo);
         micIndicator = findViewById(R.id.micIndicator);
+        mainLayout = findViewById(R.id.topBar).getRootView().findViewById(android.R.id.content);
         
         seatLayouts[0] = findViewById(R.id.seat1); seatTexts[0] = findViewById(R.id.tvSeat1); seatImages[0] = seatLayouts[0].findViewById(R.id.ivHostAvatar);
         seatLayouts[1] = findViewById(R.id.seat2); seatTexts[1] = findViewById(R.id.tvSeat2); seatImages[1] = seatLayouts[1].findViewById(R.id.ivHostAvatar);
@@ -106,7 +107,6 @@ public class ChatroomActivity extends AppCompatActivity {
             return;
         }
 
-        // 🔥 CRASH FIX: BACKGROUND IMAGE LOADING SAFELY
         try {
             final View mainView = getWindow().getDecorView().getRootView();
             String githubImageUrl = "https://images.unsplash.com/photo-1550684848-fac1c5b4e853"; 
@@ -120,9 +120,7 @@ public class ChatroomActivity extends AppCompatActivity {
                 @Override
                 public void onLoadCleared(@Nullable Drawable placeholder) {}
             });
-        } catch (Exception e) {
-            e.printStackTrace(); // Agar image load nahi hui toh kam se kam app crash nahi hoga
-        }
+        } catch (Exception e) {}
 
         if(btnClose != null) btnClose.setOnClickListener(v -> showExitDialog());
 
@@ -141,6 +139,7 @@ public class ChatroomActivity extends AppCompatActivity {
                     String nameToUse = (currentUserName != null && !currentUserName.isEmpty()) ? currentUserName : currentUserEmail.split("@")[0];
                     chatData.put("senderName", nameToUse);
                     chatData.put("message", message);
+                    chatData.put("avatarUrl", currentAvatarUrl); 
                     chatData.put("timestamp", FieldValue.serverTimestamp());
                     db.collection("Chatrooms").document(roomName).collection("Messages").add(chatData);
                 }
@@ -187,6 +186,8 @@ public class ChatroomActivity extends AppCompatActivity {
                     if(documentSnapshot.getString("avatarUrl") != null) {
                         currentAvatarUrl = documentSnapshot.getString("avatarUrl");
                     }
+                    // 🔥 FIX: Jaise hi naam aaye, seats ko wapas update karo!
+                    updateSeatsDisplay();
                 }
             });
     }
@@ -302,7 +303,6 @@ public class ChatroomActivity extends AppCompatActivity {
         builder.show();
     }
 
-    // 🔥 DP DIKHANE WALA LOGIC (Crash Proof)
     private void updateSeatsDisplay() {
         for(int i = 0; i < 8; i++) {
             if(seatTexts[i] == null || seatImages[i] == null) continue;
