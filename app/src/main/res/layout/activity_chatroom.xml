@@ -88,7 +88,6 @@
             android:layout_marginBottom="20dp">
 
             <LinearLayout android:id="@+id/seat1" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
-                <!-- ID ADDED HERE 👇 -->
                 <ImageView android:id="@+id/ivSeat1" android:layout_width="60dp" android:layout_height="60dp" android:background="@drawable/bg_round_dark" android:src="@android:drawable/ic_secure" android:tint="#888888" android:padding="15dp"/>
                 <TextView android:id="@+id/tvSeat1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Empty" android:textColor="#888888" android:textSize="12sp" android:layout_marginTop="5dp"/>
             </LinearLayout>
@@ -227,6 +226,7 @@
             android:layout_centerVertical="true"
             android:orientation="horizontal">
             
+            <!-- 🔥 Yaha maine Share icon ko id "btnShare" de di hai -->
             <ImageView
                 android:id="@+id/btnShare"
                 android:layout_width="35dp"
