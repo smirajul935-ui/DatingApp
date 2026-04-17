@@ -40,9 +40,7 @@ public class HomeActivity extends AppCompatActivity {
     FirebaseAuth mAuth;
     FirebaseFirestore db;
     String currentUserId;
-    
-    // 🔥 Variable to store User's Real Name
-    String myUserName = "User"; 
+    String myUserName = "User"; // Default name
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,7 +52,7 @@ public class HomeActivity extends AppCompatActivity {
 
         if (mAuth.getCurrentUser() != null) {
             currentUserId = mAuth.getCurrentUser().getUid();
-            fetchMyProfileName(); // 🚨 Profile se naam nikalna
+            fetchMyProfileName(); 
         } else {
             currentUserId = "Guest";
         }
@@ -89,9 +87,17 @@ public class HomeActivity extends AppCompatActivity {
                 }
             });
         }
+        
+        if (btnMessages != null) {
+            btnMessages.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(HomeActivity.this, "Opening Messages... (Coming Soon)", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 
-    // 🔥 Firebase se mera naam lao taaki Room me Host Name ban sake
     private void fetchMyProfileName() {
         db.collection("Users").document(currentUserId).get()
             .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
@@ -157,7 +163,7 @@ public class HomeActivity extends AppCompatActivity {
                 roomData.put("roomName", roomName);
                 roomData.put("roomType", roomType);
                 roomData.put("hostId", currentUserId);
-                roomData.put("hostName", myUserName); // 🚨 HOST KA NAAM DATABASE ME GAYA
+                roomData.put("hostName", myUserName); 
                 roomData.put("onlineCount", 1);
                 
                 btnSubmitRoom.setEnabled(false);
