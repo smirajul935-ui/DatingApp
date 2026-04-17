@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -15,6 +16,10 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.target.CustomTarget;
+import com.bumptech.glide.request.transition.Transition;
+import android.graphics.drawable.Drawable;
+
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -27,7 +32,9 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class ChatroomActivity extends AppCompatActivity {
@@ -35,7 +42,7 @@ public class ChatroomActivity extends AppCompatActivity {
     TextView tvRoomName, tvMicStatus;
     ImageView btnMic, btnSend, btnClose;
     EditText etMessage;
-    LinearLayout layoutMessages, micIndicator; // 🔥 ID FIX (micIndicator added here)
+    LinearLayout layoutMessages, hostInfo, micIndicator;
     ScrollView chatScroll;
 
     // 🪑 SEAT ARRAYS
@@ -46,16 +53,15 @@ public class ChatroomActivity extends AppCompatActivity {
     FirebaseAuth mAuth;
     FirebaseFirestore db;
     String roomName, currentUserEmail, currentUserId, currentUserName;
-    
-    // Default GitHub Avatar URL
     String myAvatarUrl = "https://raw.githubusercontent.com/smirajul935/DatingApp/main/avatar.png"; 
     
+    // 🔥 SECURITY VARIABLES
     boolean isHost = false; 
     boolean isOnSeat = false; 
     int mySeatIndex = -1;
     boolean isMicMuted = false;
 
-    // Seat shifting logic (Host is 1, empty is +)
+    // Seat shifting logic
     int filledSeats = 1; 
 
     @Override
@@ -82,11 +88,9 @@ public class ChatroomActivity extends AppCompatActivity {
         etMessage = findViewById(R.id.etMessage);
         layoutMessages = findViewById(R.id.layoutMessages);
         chatScroll = findViewById(R.id.chatScroll);
+        hostInfo = findViewById(R.id.hostInfo);
+        micIndicator = findViewById(R.id.micIndicator);
         
-        // 🔥 ID FIX: LINKED micIndicator to XML
-        micIndicator = findViewById(R.id.micIndicator); 
-        
-        // 🪑 Link all 8 Seats Safely
         seatLayouts[0] = findViewById(R.id.seat1); seatTexts[0] = findViewById(R.id.tvSeat1); seatImages[0] = findViewById(R.id.ivSeat1);
         seatLayouts[1] = findViewById(R.id.seat2); seatTexts[1] = findViewById(R.id.tvSeat2); seatImages[1] = findViewById(R.id.ivSeat2);
         seatLayouts[2] = findViewById(R.id.seat3); seatTexts[2] = findViewById(R.id.tvSeat3); seatImages[2] = findViewById(R.id.ivSeat3);
@@ -105,6 +109,19 @@ public class ChatroomActivity extends AppCompatActivity {
             return;
         }
 
+        try {
+            final View mainView = getWindow().getDecorView().getRootView();
+            String githubImageUrl = "https://images.unsplash.com/photo-1550684848-fac1c5b4e853"; 
+            Glide.with(this).load(githubImageUrl).centerCrop().into(new CustomTarget<Drawable>() {
+                @Override
+                public void onResourceReady(@NonNull Drawable resource, @Nullable Transition<? super Drawable> transition) {
+                    if (mainView != null) mainView.setBackground(resource);
+                }
+                @Override
+                public void onLoadCleared(@Nullable Drawable placeholder) {}
+            });
+        } catch (Exception e) {}
+
         if(btnClose != null) btnClose.setOnClickListener(v -> showExitDialog());
 
         if(btnMic != null) {
@@ -117,7 +134,6 @@ public class ChatroomActivity extends AppCompatActivity {
             });
         }
 
-        // --- SEND MESSAGES ---
         if(btnSend != null && etMessage != null) {
             btnSend.setOnClickListener(v -> {
                 String message = etMessage.getText().toString().trim();
@@ -127,13 +143,13 @@ public class ChatroomActivity extends AppCompatActivity {
                     String nameToUse = (currentUserName != null && !currentUserName.isEmpty()) ? currentUserName : currentUserEmail.split("@")[0];
                     chatData.put("senderName", nameToUse);
                     chatData.put("message", message);
+                    chatData.put("avatarUrl", myAvatarUrl); 
                     chatData.put("timestamp", FieldValue.serverTimestamp());
                     db.collection("Chatrooms").document(roomName).collection("Messages").add(chatData);
                 }
             });
         }
 
-        // --- RECEIVE MESSAGES (Live Chat) ---
         if(layoutMessages != null && chatScroll != null && roomName != null) {
             db.collection("Chatrooms").document(roomName).collection("Messages")
                     .orderBy("timestamp", Query.Direction.ASCENDING)
@@ -168,7 +184,7 @@ public class ChatroomActivity extends AppCompatActivity {
     private void fetchMyProfileInfo() {
         db.collection("Users").document(currentUserId).get()
             .addOnSuccessListener(documentSnapshot -> {
-                if (documentSnapshot.exists() && documentSnapshot.getString("userName") != null) {
+                if (documentSnapshot.exists()) {
                     currentUserName = documentSnapshot.getString("userName");
                     if (documentSnapshot.getString("avatarUrl") != null) {
                         myAvatarUrl = documentSnapshot.getString("avatarUrl");
@@ -238,7 +254,7 @@ public class ChatroomActivity extends AppCompatActivity {
 
             if (i < filledSeats) {
                 if (i == 0) { 
-                    seatTexts[i].setText(isHost ? (currentUserName != null ? currentUserName : "Host") : seatTexts[0].getText().toString());
+                    seatTexts[i].setText(isHost ? (currentUserName != null ? currentUserName : "Host") : "Host");
                     seatTexts[i].setTextColor(android.graphics.Color.parseColor("#E91E63"));
                 } else { 
                     seatTexts[i].setText("User " + i);
@@ -246,7 +262,6 @@ public class ChatroomActivity extends AppCompatActivity {
                 }
                 
                 seatImages[i].clearColorFilter(); 
-                
                 try {
                     Glide.with(this).load(myAvatarUrl).circleCrop().into(seatImages[i]);
                 } catch (Exception e) {
@@ -277,15 +292,44 @@ public class ChatroomActivity extends AppCompatActivity {
             if (seatIndex < filledSeats && seatIndex != 0) {
                 showHostPowersDialog("Seat " + (seatIndex + 1)); 
             } else if (seatIndex == filledSeats) {
-                addDummyUserToSeat(); 
+                // 🔥 NAYA FEATURE: PENDING REQUESTS LIST DIKHEGI
+                showPendingRequestsDialog(); 
             }
         } else {
             if (seatIndex == filledSeats) {
-                Toast.makeText(ChatroomActivity.this, "Request Sent to Host!", Toast.LENGTH_SHORT).show();
+                // 🔥 AUDIENCE NE REQUEST BHEJI
+                Toast.makeText(ChatroomActivity.this, "Request Sent to Host! Please wait for approval.", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(ChatroomActivity.this, "You can't control this seat.", Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    // 🚨 🔥 NAYA FEATURE: HOST REQUEST POPUP
+    private void showPendingRequestsDialog() {
+        // Abhi hum dummy users ka naam de rahe hain test karne ke liye.
+        // Aage chal kar ye list Firebase se aayegi un logo ki jinhone request bheji hai.
+        List<String> requests = new ArrayList<>();
+        requests.add("Emma (Pending Request)");
+        requests.add("Rahul (Pending Request)");
+        requests.add("Priya (Pending Request)");
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, requests);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Select user to add on seat:");
+        
+        builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String selectedUser = requests.get(which);
+                Toast.makeText(ChatroomActivity.this, selectedUser + " added to the seat!", Toast.LENGTH_SHORT).show();
+                addDummyUserToSeat(); // Us user ko seat par add kar dega
+            }
+        });
+        
+        builder.setNegativeButton("Cancel", null);
+        builder.show();
     }
 
     private void addDummyUserToSeat() {
