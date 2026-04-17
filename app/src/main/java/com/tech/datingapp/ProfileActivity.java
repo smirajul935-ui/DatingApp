@@ -15,6 +15,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -52,7 +53,7 @@ public class ProfileActivity extends AppCompatActivity {
         rbFemale = findViewById(R.id.rbFemale);
         btnSaveProfile = findViewById(R.id.btnSaveProfile);
 
-        // 🚨 LOAD PROFILE DATA FROM FIREBASE WHEN OPENED
+        // 🔥 LOAD DATA: Ekdum Safe tarike se
         loadUserProfile();
 
         if(ivAvatar != null) {
@@ -85,8 +86,9 @@ public class ProfileActivity extends AppCompatActivity {
                     btnSaveProfile.setEnabled(false);
                     btnSaveProfile.setText("Saving...");
 
+                    // 🔥 Merge SetOptions: Purana data delete nahi karega
                     db.collection("Users").document(currentUserId)
-                        .set(userProfile)
+                        .set(userProfile, SetOptions.merge())
                         .addOnSuccessListener(new OnSuccessListener<Void>() {
                             @Override
                             public void onSuccess(Void aVoid) {
@@ -107,7 +109,6 @@ public class ProfileActivity extends AppCompatActivity {
         }
     }
 
-    // 🚨 FIREBASE SE DATA PADH KAR SCREEN PAR SET KARNA
     private void loadUserProfile() {
         db.collection("Users").document(currentUserId).get()
             .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
@@ -117,13 +118,13 @@ public class ProfileActivity extends AppCompatActivity {
                         String savedName = documentSnapshot.getString("userName");
                         String savedGender = documentSnapshot.getString("gender");
 
-                        if (savedName != null && etUserName != null) {
+                        if (savedName != null && !savedName.isEmpty()) {
                             etUserName.setText(savedName);
                         }
                         if (savedGender != null && savedGender.equals("Female")) {
-                            if(rbFemale != null) rbFemale.setChecked(true);
+                            rbFemale.setChecked(true);
                         } else {
-                            if(rbMale != null) rbMale.setChecked(true);
+                            rbMale.setChecked(true);
                         }
                     }
                 }
