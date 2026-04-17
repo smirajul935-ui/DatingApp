@@ -1,6 +1,7 @@
 package com.tech.datingapp;
 
 import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
@@ -14,6 +15,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -32,7 +35,7 @@ public class ChatroomActivity extends AppCompatActivity {
     TextView tvRoomName, tvMicStatus;
     ImageView btnMic, btnSend, btnClose;
     EditText etMessage;
-    LinearLayout layoutMessages; 
+    LinearLayout layoutMessages, micIndicator; // 🔥 ID FIX (micIndicator added here)
     ScrollView chatScroll;
 
     // 🪑 SEAT ARRAYS
@@ -80,7 +83,10 @@ public class ChatroomActivity extends AppCompatActivity {
         layoutMessages = findViewById(R.id.layoutMessages);
         chatScroll = findViewById(R.id.chatScroll);
         
-        // 🪑 Safe IDs Link (XML update hone ke baad error nahi aayegi)
+        // 🔥 ID FIX: LINKED micIndicator to XML
+        micIndicator = findViewById(R.id.micIndicator); 
+        
+        // 🪑 Link all 8 Seats Safely
         seatLayouts[0] = findViewById(R.id.seat1); seatTexts[0] = findViewById(R.id.tvSeat1); seatImages[0] = findViewById(R.id.ivSeat1);
         seatLayouts[1] = findViewById(R.id.seat2); seatTexts[1] = findViewById(R.id.tvSeat2); seatImages[1] = findViewById(R.id.ivSeat2);
         seatLayouts[2] = findViewById(R.id.seat3); seatTexts[2] = findViewById(R.id.tvSeat3); seatImages[2] = findViewById(R.id.ivSeat3);
@@ -111,6 +117,7 @@ public class ChatroomActivity extends AppCompatActivity {
             });
         }
 
+        // --- SEND MESSAGES ---
         if(btnSend != null && etMessage != null) {
             btnSend.setOnClickListener(v -> {
                 String message = etMessage.getText().toString().trim();
@@ -126,6 +133,7 @@ public class ChatroomActivity extends AppCompatActivity {
             });
         }
 
+        // --- RECEIVE MESSAGES (Live Chat) ---
         if(layoutMessages != null && chatScroll != null && roomName != null) {
             db.collection("Chatrooms").document(roomName).collection("Messages")
                     .orderBy("timestamp", Query.Direction.ASCENDING)
@@ -166,7 +174,7 @@ public class ChatroomActivity extends AppCompatActivity {
                         myAvatarUrl = documentSnapshot.getString("avatarUrl");
                     }
                 }
-                verifyHostFromServer(); // Name milne ke baad host check karo
+                verifyHostFromServer(); 
             });
     }
 
@@ -177,7 +185,6 @@ public class ChatroomActivity extends AppCompatActivity {
                     if (task.isSuccessful() && task.getResult() != null && !task.getResult().isEmpty()) {
                         DocumentSnapshot document = task.getResult().getDocuments().get(0);
                         String serverHostId = document.getString("hostId");
-                        String serverHostName = document.getString("hostName"); 
 
                         if (serverHostId != null && serverHostId.equals(currentUserId)) {
                             isHost = true;
@@ -190,10 +197,6 @@ public class ChatroomActivity extends AppCompatActivity {
                             isOnSeat = false;
                             mySeatIndex = -1;
                             updateMicVisibility(); 
-                            
-                            if(seatTexts[0] != null && serverHostName != null) {
-                                seatTexts[0].setText(serverHostName);
-                            }
                             updateSeatsDisplay();
                         }
                     }
@@ -229,13 +232,11 @@ public class ChatroomActivity extends AppCompatActivity {
         }
     }
 
-    // 🔥 SHIFTING LOGIC & SAFE AVATAR LOAD (Crash Proof)
     private void updateSeatsDisplay() {
         for(int i = 0; i < 8; i++) {
             if(seatTexts[i] == null || seatImages[i] == null) continue;
 
             if (i < filledSeats) {
-                // Bhari Hui Seat (Host or other user)
                 if (i == 0) { 
                     seatTexts[i].setText(isHost ? (currentUserName != null ? currentUserName : "Host") : seatTexts[0].getText().toString());
                     seatTexts[i].setTextColor(android.graphics.Color.parseColor("#E91E63"));
@@ -244,9 +245,8 @@ public class ChatroomActivity extends AppCompatActivity {
                     seatTexts[i].setTextColor(android.graphics.Color.WHITE);
                 }
                 
-                seatImages[i].clearColorFilter(); // Remove grey tint so DP shows colors
+                seatImages[i].clearColorFilter(); 
                 
-                // Safely Load Avatar via Glide
                 try {
                     Glide.with(this).load(myAvatarUrl).circleCrop().into(seatImages[i]);
                 } catch (Exception e) {
@@ -254,17 +254,15 @@ public class ChatroomActivity extends AppCompatActivity {
                 }
 
             } else if (i == filledSeats) { 
-                // Ye wali seat Khali hai, yaha "+" (Invite) dikhega
                 seatTexts[i].setText(isHost ? "+ Invite" : "Request");
                 seatTexts[i].setTextColor(isHost ? android.graphics.Color.parseColor("#2196F3") : android.graphics.Color.parseColor("#FFC107"));
                 seatImages[i].setImageResource(android.R.drawable.ic_menu_add);
                 seatImages[i].setColorFilter(isHost ? android.graphics.Color.parseColor("#2196F3") : android.graphics.Color.parseColor("#FFC107"));
                 
             } else { 
-                // Baki aage ki sabhi seats Empty/Locked dikhengi
                 seatTexts[i].setText("Empty");
                 seatTexts[i].setTextColor(android.graphics.Color.parseColor("#888888"));
-                seatImages[i].setImageResource(android.R.drawable.ic_secure); // Lock
+                seatImages[i].setImageResource(android.R.drawable.ic_secure); 
                 seatImages[i].setColorFilter(android.graphics.Color.parseColor("#888888"));
             }
         }
@@ -279,7 +277,6 @@ public class ChatroomActivity extends AppCompatActivity {
             if (seatIndex < filledSeats && seatIndex != 0) {
                 showHostPowersDialog("Seat " + (seatIndex + 1)); 
             } else if (seatIndex == filledSeats) {
-                // Host clicks "+" -> Adds user, "+" shifts to next
                 addDummyUserToSeat(); 
             }
         } else {
@@ -293,7 +290,7 @@ public class ChatroomActivity extends AppCompatActivity {
 
     private void addDummyUserToSeat() {
         if(filledSeats < 8) {
-            filledSeats++; // Seat bhari, ab agla "+" shift hoga
+            filledSeats++; 
             updateSeatsDisplay();
         }
     }
