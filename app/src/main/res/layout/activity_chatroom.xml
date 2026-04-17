@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:background="#121215">
 
-    <!-- 🌟 TOP BAR (Host Info) -->
+    <!-- 🌟 TOP BAR -->
     <RelativeLayout
         android:id="@+id/topBar"
         android:layout_width="match_parent"
@@ -14,7 +14,6 @@
         android:paddingVertical="5dp"
         android:elevation="4dp">
 
-        <!-- Host Profile & Room Info -->
         <LinearLayout
             android:id="@+id/hostInfo"
             android:layout_width="wrap_content"
@@ -60,7 +59,6 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Right Side: Close Button (Will open Minimize/Exit dialog) -->
         <ImageView
             android:id="@+id/btnClose"
             android:layout_width="35dp"
@@ -71,7 +69,7 @@
             android:tint="#FFFFFF"/>
     </RelativeLayout>
 
-    <!-- 🪑 8 SEATS GRID (2 Rows of 4, Video Jaisa Modern Look) -->
+    <!-- 🪑 8 SEATS GRID -->
     <LinearLayout
         android:id="@+id/seatsLayout"
         android:layout_width="match_parent"
@@ -81,7 +79,7 @@
         android:padding="15dp"
         android:layout_marginTop="10dp">
 
-        <!-- ROW 1 (4 Seats) -->
+        <!-- ROW 1 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -90,27 +88,28 @@
             android:layout_marginBottom="20dp">
 
             <LinearLayout android:id="@+id/seat1" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
-                <ImageView android:layout_width="60dp" android:layout_height="60dp" android:background="@drawable/bg_round_dark" android:src="@android:drawable/ic_secure" android:tint="#888888" android:padding="15dp"/>
+                <!-- ID ADDED HERE 👇 -->
+                <ImageView android:id="@+id/ivSeat1" android:layout_width="60dp" android:layout_height="60dp" android:background="@drawable/bg_round_dark" android:src="@android:drawable/ic_secure" android:tint="#888888" android:padding="15dp"/>
                 <TextView android:id="@+id/tvSeat1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Empty" android:textColor="#888888" android:textSize="12sp" android:layout_marginTop="5dp"/>
             </LinearLayout>
 
             <LinearLayout android:id="@+id/seat2" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
-                <ImageView android:layout_width="60dp" android:layout_height="60dp" android:background="@drawable/bg_round_dark" android:src="@android:drawable/ic_secure" android:tint="#888888" android:padding="15dp"/>
+                <ImageView android:id="@+id/ivSeat2" android:layout_width="60dp" android:layout_height="60dp" android:background="@drawable/bg_round_dark" android:src="@android:drawable/ic_secure" android:tint="#888888" android:padding="15dp"/>
                 <TextView android:id="@+id/tvSeat2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Empty" android:textColor="#888888" android:textSize="12sp" android:layout_marginTop="5dp"/>
             </LinearLayout>
 
             <LinearLayout android:id="@+id/seat3" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
-                <ImageView android:layout_width="60dp" android:layout_height="60dp" android:background="@drawable/bg_round_dark" android:src="@android:drawable/ic_secure" android:tint="#888888" android:padding="15dp"/>
+                <ImageView android:id="@+id/ivSeat3" android:layout_width="60dp" android:layout_height="60dp" android:background="@drawable/bg_round_dark" android:src="@android:drawable/ic_secure" android:tint="#888888" android:padding="15dp"/>
                 <TextView android:id="@+id/tvSeat3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Empty" android:textColor="#888888" android:textSize="12sp" android:layout_marginTop="5dp"/>
             </LinearLayout>
 
             <LinearLayout android:id="@+id/seat4" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
-                <ImageView android:layout_width="60dp" android:layout_height="60dp" android:background="@drawable/bg_round_dark" android:src="@android:drawable/ic_secure" android:tint="#888888" android:padding="15dp"/>
+                <ImageView android:id="@+id/ivSeat4" android:layout_width="60dp" android:layout_height="60dp" android:background="@drawable/bg_round_dark" android:src="@android:drawable/ic_secure" android:tint="#888888" android:padding="15dp"/>
                 <TextView android:id="@+id/tvSeat4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Empty" android:textColor="#888888" android:textSize="12sp" android:layout_marginTop="5dp"/>
             </LinearLayout>
         </LinearLayout>
 
-        <!-- ROW 2 (4 Seats) -->
+        <!-- ROW 2 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -118,28 +117,28 @@
             android:weightSum="4">
 
             <LinearLayout android:id="@+id/seat5" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
-                <ImageView android:layout_width="60dp" android:layout_height="60dp" android:background="@drawable/bg_round_dark" android:src="@android:drawable/ic_secure" android:tint="#888888" android:padding="15dp"/>
+                <ImageView android:id="@+id/ivSeat5" android:layout_width="60dp" android:layout_height="60dp" android:background="@drawable/bg_round_dark" android:src="@android:drawable/ic_secure" android:tint="#888888" android:padding="15dp"/>
                 <TextView android:id="@+id/tvSeat5" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Empty" android:textColor="#888888" android:textSize="12sp" android:layout_marginTop="5dp"/>
             </LinearLayout>
 
             <LinearLayout android:id="@+id/seat6" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
-                <ImageView android:layout_width="60dp" android:layout_height="60dp" android:background="@drawable/bg_round_dark" android:src="@android:drawable/ic_secure" android:tint="#888888" android:padding="15dp"/>
+                <ImageView android:id="@+id/ivSeat6" android:layout_width="60dp" android:layout_height="60dp" android:background="@drawable/bg_round_dark" android:src="@android:drawable/ic_secure" android:tint="#888888" android:padding="15dp"/>
                 <TextView android:id="@+id/tvSeat6" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Empty" android:textColor="#888888" android:textSize="12sp" android:layout_marginTop="5dp"/>
             </LinearLayout>
 
             <LinearLayout android:id="@+id/seat7" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
-                <ImageView android:layout_width="60dp" android:layout_height="60dp" android:background="@drawable/bg_round_dark" android:src="@android:drawable/ic_secure" android:tint="#888888" android:padding="15dp"/>
+                <ImageView android:id="@+id/ivSeat7" android:layout_width="60dp" android:layout_height="60dp" android:background="@drawable/bg_round_dark" android:src="@android:drawable/ic_secure" android:tint="#888888" android:padding="15dp"/>
                 <TextView android:id="@+id/tvSeat7" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Empty" android:textColor="#888888" android:textSize="12sp" android:layout_marginTop="5dp"/>
             </LinearLayout>
 
             <LinearLayout android:id="@+id/seat8" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
-                <ImageView android:layout_width="60dp" android:layout_height="60dp" android:background="@drawable/bg_round_dark" android:src="@android:drawable/ic_secure" android:tint="#888888" android:padding="15dp"/>
+                <ImageView android:id="@+id/ivSeat8" android:layout_width="60dp" android:layout_height="60dp" android:background="@drawable/bg_round_dark" android:src="@android:drawable/ic_secure" android:tint="#888888" android:padding="15dp"/>
                 <TextView android:id="@+id/tvSeat8" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Empty" android:textColor="#888888" android:textSize="12sp" android:layout_marginTop="5dp"/>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 
-    <!-- 🎙️ MIC INDICATOR BAR (Video Jaisa) -->
+    <!-- 🎙️ MIC INDICATOR -->
     <LinearLayout
         android:id="@+id/micIndicator"
         android:layout_width="match_parent"
@@ -167,7 +166,7 @@
             android:textSize="14sp"/>
     </LinearLayout>
 
-    <!-- 💬 LIVE CHAT COMMENTS SECTION -->
+    <!-- 💬 LIVE CHAT -->
     <ScrollView
         android:id="@+id/chatScroll"
         android:layout_width="match_parent"
