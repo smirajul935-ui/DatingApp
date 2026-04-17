@@ -1,7 +1,9 @@
 package com.tech.datingapp;
 
 import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
@@ -9,6 +11,7 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -20,7 +23,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
-import android.graphics.drawable.Drawable;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -42,7 +44,7 @@ import java.util.Map;
 public class ChatroomActivity extends AppCompatActivity {
 
     TextView tvRoomName, tvMicStatus;
-    ImageView btnMic, btnSend, btnClose, btnShare; // 🔥 ADDED btnShare
+    ImageView btnMic, btnSend, btnClose, btnShare;
     EditText etMessage;
     LinearLayout layoutMessages, hostInfo, micIndicator;
     ScrollView chatScroll;
@@ -94,12 +96,6 @@ public class ChatroomActivity extends AppCompatActivity {
         hostInfo = findViewById(R.id.hostInfo);
         micIndicator = findViewById(R.id.micIndicator);
         
-        // 🔥 LINK SHARE BUTTON TO XML
-        // Note: XML mein humne rightIcons ke andar share icon dala tha. Agar wahan ID nahi thi toh ye kaam nahi karega
-        // Lekin XML mein pehle se ek Share icon hai, usko access karne ke liye yahan ID fix karni padegi.
-        // XML mein share button ko ID deni hogi. For now, hum assume kar rahe hai ID "btnShare" hai.
-        
-        // As a fallback agar btnShare XML me nahi hai toh error naa aaye:
         try {
             btnShare = findViewById(R.id.btnShare); 
         } catch (Exception e) {}
@@ -139,12 +135,7 @@ public class ChatroomActivity extends AppCompatActivity {
 
         // 🔥 SHARE BUTTON LOGIC (WhatsApp / Others)
         if(btnShare != null) {
-            btnShare.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    shareChatroomLink();
-                }
-            });
+            btnShare.setOnClickListener(v -> shareChatroomLink());
         }
 
         if(btnMic != null) {
@@ -206,7 +197,6 @@ public class ChatroomActivity extends AppCompatActivity {
         }
     }
 
-    // 🚨 FIREBASE HOST VERIFICATION
     private void verifyHostFromServer() {
         if(roomName == null || roomName.isEmpty()) return;
         db.collection("Rooms").whereEqualTo("roomName", roomName).get()
@@ -243,9 +233,7 @@ public class ChatroomActivity extends AppCompatActivity {
             });
     }
 
-    // 🔥 NEW: SHARE CHATROOM LINK LOGIC
     private void shareChatroomLink() {
-        // Ye tumhara custom link banega (Ise aage chal ke hum Catch karenge App me)
         String appLink = "https://securedating.app/join?room=" + roomName.replace(" ", "%20");
         String shareMessage = "Hey! Join my live chatroom *" + roomName + "* on Secure Dating App. \n\nClick the link to join directly: \n" + appLink;
 
@@ -254,7 +242,6 @@ public class ChatroomActivity extends AppCompatActivity {
         shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Join my Chatroom");
         shareIntent.putExtra(Intent.EXTRA_TEXT, shareMessage);
         
-        // WhatsApp ya dusre apps ko choose karne ka option dega
         startActivity(Intent.createChooser(shareIntent, "Share Room via"));
     }
 
@@ -338,7 +325,7 @@ public class ChatroomActivity extends AppCompatActivity {
             }
         } else {
             if (seatIndex == filledSeats) {
-                Toast.makeText(ChatroomActivity.this, "Request Sent to Host!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ChatroomActivity.this, "Request Sent to Host! Please wait for approval.", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(ChatroomActivity.this, "You can't control this seat.", Toast.LENGTH_SHORT).show();
             }
