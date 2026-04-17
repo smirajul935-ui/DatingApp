@@ -42,7 +42,6 @@ public class ChatroomActivity extends AppCompatActivity {
     EditText etMessage;
     LinearLayout layoutMessages, hostInfo, micIndicator; 
     ScrollView chatScroll;
-    RelativeLayout mainLayout;
 
     // 🪑 SEAT ARRAYS
     TextView[] seatTexts = new TextView[8];
@@ -52,7 +51,7 @@ public class ChatroomActivity extends AppCompatActivity {
     FirebaseAuth mAuth;
     FirebaseFirestore db;
     String roomName, currentUserEmail, currentUserId, currentUserName;
-    String currentAvatarUrl = "https://raw.githubusercontent.com/smirajul935/DatingApp/main/avatar.png"; // Dummy Avatar
+    String currentAvatarUrl = "default"; 
     
     // 🔥 SECURITY VARIABLES
     boolean isHost = false; 
@@ -88,7 +87,6 @@ public class ChatroomActivity extends AppCompatActivity {
         chatScroll = findViewById(R.id.chatScroll);
         hostInfo = findViewById(R.id.hostInfo);
         micIndicator = findViewById(R.id.micIndicator);
-        mainLayout = findViewById(R.id.topBar).getRootView().findViewById(android.R.id.content);
         
         seatLayouts[0] = findViewById(R.id.seat1); seatTexts[0] = findViewById(R.id.tvSeat1); seatImages[0] = seatLayouts[0].findViewById(R.id.ivHostAvatar);
         seatLayouts[1] = findViewById(R.id.seat2); seatTexts[1] = findViewById(R.id.tvSeat2); seatImages[1] = seatLayouts[1].findViewById(R.id.ivHostAvatar);
@@ -108,17 +106,23 @@ public class ChatroomActivity extends AppCompatActivity {
             return;
         }
 
-        // 🔥 GITHUB BACKGROUND IMAGE LOGIC
-        // Tum yaha apna koi bhi image link daal sakte ho GitHub se
-        String githubImageUrl = "https://images.unsplash.com/photo-1550684848-fac1c5b4e853"; 
-        Glide.with(this).load(githubImageUrl).centerCrop().into(new CustomTarget<Drawable>() {
-            @Override
-            public void onResourceReady(@NonNull Drawable resource, @Nullable Transition<? super Drawable> transition) {
-                mainLayout.setBackground(resource);
-            }
-            @Override
-            public void onLoadCleared(@Nullable Drawable placeholder) {}
-        });
+        // 🔥 CRASH FIX: BACKGROUND IMAGE LOADING SAFELY
+        try {
+            final View mainView = getWindow().getDecorView().getRootView();
+            String githubImageUrl = "https://images.unsplash.com/photo-1550684848-fac1c5b4e853"; 
+            Glide.with(this).load(githubImageUrl).centerCrop().into(new CustomTarget<Drawable>() {
+                @Override
+                public void onResourceReady(@NonNull Drawable resource, @Nullable Transition<? super Drawable> transition) {
+                    if (mainView != null) {
+                        mainView.setBackground(resource);
+                    }
+                }
+                @Override
+                public void onLoadCleared(@Nullable Drawable placeholder) {}
+            });
+        } catch (Exception e) {
+            e.printStackTrace(); // Agar image load nahi hui toh kam se kam app crash nahi hoga
+        }
 
         if(btnClose != null) btnClose.setOnClickListener(v -> showExitDialog());
 
@@ -128,7 +132,6 @@ public class ChatroomActivity extends AppCompatActivity {
             });
         }
 
-        // --- SEND MESSAGES (With Avatar URL) ---
         if(btnSend != null && etMessage != null) {
             btnSend.setOnClickListener(v -> {
                 String message = etMessage.getText().toString().trim();
@@ -138,14 +141,12 @@ public class ChatroomActivity extends AppCompatActivity {
                     String nameToUse = (currentUserName != null && !currentUserName.isEmpty()) ? currentUserName : currentUserEmail.split("@")[0];
                     chatData.put("senderName", nameToUse);
                     chatData.put("message", message);
-                    chatData.put("avatarUrl", currentAvatarUrl); // Message me DP bhi jayegi
                     chatData.put("timestamp", FieldValue.serverTimestamp());
                     db.collection("Chatrooms").document(roomName).collection("Messages").add(chatData);
                 }
             });
         }
 
-        // --- RECEIVE MESSAGES (Live Chat) ---
         if(layoutMessages != null && chatScroll != null) {
             db.collection("Chatrooms").document(roomName).collection("Messages")
                     .orderBy("timestamp", Query.Direction.ASCENDING)
@@ -183,7 +184,6 @@ public class ChatroomActivity extends AppCompatActivity {
             .addOnSuccessListener(documentSnapshot -> {
                 if (documentSnapshot.exists()) {
                     currentUserName = documentSnapshot.getString("userName");
-                    // Avatar URL get kar rahe hain
                     if(documentSnapshot.getString("avatarUrl") != null) {
                         currentAvatarUrl = documentSnapshot.getString("avatarUrl");
                     }
@@ -302,7 +302,7 @@ public class ChatroomActivity extends AppCompatActivity {
         builder.show();
     }
 
-    // 🔥 DP DIKHANE WALA LOGIC
+    // 🔥 DP DIKHANE WALA LOGIC (Crash Proof)
     private void updateSeatsDisplay() {
         for(int i = 0; i < 8; i++) {
             if(seatTexts[i] == null || seatImages[i] == null) continue;
@@ -311,17 +311,17 @@ public class ChatroomActivity extends AppCompatActivity {
                 if (i == 0) { 
                     seatTexts[i].setText(isHost ? (currentUserName != null ? currentUserName : "Host") : "Host");
                     seatTexts[i].setTextColor(android.graphics.Color.parseColor("#E91E63"));
-                    
-                    // Host ka asli DP load karega
-                    Glide.with(this).load("https://raw.githubusercontent.com/smirajul935/DatingApp/main/avatar.png")
-                         .placeholder(android.R.drawable.sym_def_app_icon).circleCrop().into(seatImages[i]);
-                         
+                    try {
+                        Glide.with(this).load("https://raw.githubusercontent.com/smirajul935/DatingApp/main/avatar.png")
+                             .placeholder(android.R.drawable.sym_def_app_icon).circleCrop().into(seatImages[i]);
+                    } catch (Exception e) {}
                 } else { 
                     seatTexts[i].setText("User");
                     seatTexts[i].setTextColor(android.graphics.Color.WHITE);
-                    // User ka asli DP load karega
-                    Glide.with(this).load("https://raw.githubusercontent.com/smirajul935/DatingApp/main/avatar.png")
-                         .placeholder(android.R.drawable.sym_def_app_icon).circleCrop().into(seatImages[i]);
+                    try {
+                        Glide.with(this).load("https://raw.githubusercontent.com/smirajul935/DatingApp/main/avatar.png")
+                             .placeholder(android.R.drawable.sym_def_app_icon).circleCrop().into(seatImages[i]);
+                    } catch (Exception e) {}
                 }
             } else if (i == filledSeats) { 
                 seatTexts[i].setText(isHost ? "+ Invite" : "Request");
