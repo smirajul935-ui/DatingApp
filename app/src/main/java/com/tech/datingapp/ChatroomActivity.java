@@ -51,10 +51,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// 🔥 AGORA VOICE SDK
-import io.agora.rtc.Constants;
-import io.agora.rtc.IRtcEngineEventHandler;
-import io.agora.rtc.RtcEngine;
+// 🔥 AGORA VOICE SDK IMPORTS (ALL REQUIRED)
+import io.agora.rtc2.Constants;
+import io.agora.rtc2.IRtcEngineEventHandler;
+import io.agora.rtc2.RtcEngine;
+import io.agora.rtc2.RtcEngineConfig;
 
 public class ChatroomActivity extends AppCompatActivity {
 
@@ -91,12 +92,10 @@ public class ChatroomActivity extends AppCompatActivity {
     // 🚨 Tumhara Render Server URL (Token Lene ke liye)
     private String SERVER_URL = "https://datingserver-ymcg.onrender.com/api/agora-token";
     
-    // 🚨 WARNING: AGORA KI APP ID YAHAN NAHI DAALNI HAI! 
-    // Iski jagah blank chhodna ya dummy daalna hai kyunki token server se aayega.
-    // Lekin SDK ko initialize karne ke liye App ID chahiye hoti hai, toh hum temporary App ID daal rahe hain.
     // TUMHE APNI AGORA APP ID YAHAN REPLACE KARNI HAI 👇
     private String AGORA_APP_ID = "2d86b6c9fb734633ba19efd1b9126658"; 
 
+    // Agora Event Handler (v4.1.1 ke liye `IRtcEngineEventHandler` hi lagta hai)
     private final IRtcEngineEventHandler mRtcEventHandler = new IRtcEngineEventHandler() {
         @Override
         public void onJoinChannelSuccess(String channel, int uid, int elapsed) {
@@ -246,7 +245,11 @@ public class ChatroomActivity extends AppCompatActivity {
     // 🔥 INITIALIZE AGORA AND FETCH TOKEN
     private void initializeAndJoinAgora() {
         try {
-            mRtcEngine = RtcEngine.create(getBaseContext(), AGORA_APP_ID, mRtcEventHandler);
+            RtcEngineConfig config = new RtcEngineConfig();
+            config.mContext = getBaseContext();
+            config.mAppId = AGORA_APP_ID;
+            config.mEventHandler = mRtcEventHandler;
+            mRtcEngine = RtcEngine.create(config);
             
             mRtcEngine.setChannelProfile(Constants.CHANNEL_PROFILE_LIVE_BROADCASTING);
             if (isOnSeat || isHost) {
