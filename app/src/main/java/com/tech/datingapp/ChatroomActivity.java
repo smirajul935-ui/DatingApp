@@ -266,7 +266,9 @@ public class ChatroomActivity extends AppCompatActivity {
         }
     }
 
+// 🔥 FINAL FIX: AGORA TOKEN FETCHING 
     private void fetchSecureAgoraToken(String channelName, int uid) {
+        // Tumhara exact Render URL. Isme koi space nahi hona chahiye
         String finalUrl = SERVER_URL + "?channelName=" + channelName + "&uid=" + uid;
 
         StringRequest request = new StringRequest(Request.Method.GET, finalUrl,
@@ -276,18 +278,38 @@ public class ChatroomActivity extends AppCompatActivity {
                     try {
                         JSONObject obj = new JSONObject(response);
                         String secureToken = obj.getString("token");
-                        mRtcEngine.joinChannel(secureToken, channelName, "", uid);
+                        
+                        // Token milne ke baad hi Channel Join karo
+                        if (mRtcEngine != null) {
+                            mRtcEngine.joinChannel(secureToken, channelName, "", uid);
+                            // Ek chota popup success ka
+                            Toast.makeText(ChatroomActivity.this, "Voice Server Connected! 🟢", Toast.LENGTH_SHORT).show();
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
+                        Toast.makeText(ChatroomActivity.this, "Token Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 }
             },
             new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
-                    Toast.makeText(ChatroomActivity.this, "Voice Server Connection Failed!", Toast.LENGTH_SHORT).show();
+                    // Agar server sota hua (sleep mode) mila, toh detail error dikhao
+                    String errorMsg = "Server Failed! ";
+                    if(error.networkResponse != null) {
+                        errorMsg += "Code: " + error.networkResponse.statusCode;
+                    } else {
+                        errorMsg += "Check Internet or Server URL.";
+                    }
+                    Toast.makeText(ChatroomActivity.this, errorMsg, Toast.LENGTH_LONG).show();
                 }
             });
+
+        // Timeout badha do (Kyunki Render free server kabhi kabhi slow reply deta hai)
+        request.setRetryPolicy(new com.android.volley.DefaultRetryPolicy(
+                10000, // 10 seconds timeout
+                com.android.volley.DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                com.android.volley.DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 
         Volley.newRequestQueue(this).add(request);
     }
