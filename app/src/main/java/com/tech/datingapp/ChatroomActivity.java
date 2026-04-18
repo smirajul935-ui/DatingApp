@@ -1,8 +1,10 @@
 package com.tech.datingapp;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.View;
@@ -18,7 +20,14 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
@@ -35,10 +44,17 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+// 🔥 AGORA VOICE SDK
+import io.agora.rtc.Constants;
+import io.agora.rtc.IRtcEngineEventHandler;
+import io.agora.rtc.RtcEngine;
 
 public class ChatroomActivity extends AppCompatActivity {
 
@@ -50,27 +66,61 @@ public class ChatroomActivity extends AppCompatActivity {
     RelativeLayout mainLayout;
 
     // 🪑 SEAT ARRAYS
-    RelativeLayout[] seatLayouts = new RelativeLayout[8]; // Changed to RelativeLayout to support Mute Icon overlay
+    RelativeLayout[] seatLayouts = new RelativeLayout[8];
     TextView[] seatTexts = new TextView[8];
     ImageView[] seatImages = new ImageView[8];
-    ImageView[] seatMuteIcons = new ImageView[8]; // NAYA: Mute Icon Array
-    boolean[] isSeatMuted = new boolean[8]; // Mute ka status track karega
+    ImageView[] seatMuteIcons = new ImageView[8];
+    boolean[] isSeatMuted = new boolean[8];
 
     FirebaseAuth mAuth;
     FirebaseFirestore db;
     String roomName, currentUserEmail, currentUserId, currentUserName;
     String myAvatarUrl = "https://raw.githubusercontent.com/smirajul935/DatingApp/main/avatar.png"; 
     
+    // SECURITY VARIABLES
     boolean isHost = false; 
     boolean isOnSeat = false; 
     int mySeatIndex = -1;
     boolean isMicMuted = false;
     int filledSeats = 1; 
 
+    // 🔥 AGORA VARIABLES
+    private RtcEngine mRtcEngine;
+    private int agoraUid = 0; 
+    
+    // 🚨 Tumhara Render Server URL (Token Lene ke liye)
+    private String SERVER_URL = "https://datingserver-ymcg.onrender.com/api/agora-token";
+    
+    // 🚨 WARNING: AGORA KI APP ID YAHAN NAHI DAALNI HAI! 
+    // Iski jagah blank chhodna ya dummy daalna hai kyunki token server se aayega.
+    // Lekin SDK ko initialize karne ke liye App ID chahiye hoti hai, toh hum temporary App ID daal rahe hain.
+    // TUMHE APNI AGORA APP ID YAHAN REPLACE KARNI HAI 👇
+    private String AGORA_APP_ID = "2d86b6c9fb734633ba19efd1b9126658"; 
+
+    private final IRtcEngineEventHandler mRtcEventHandler = new IRtcEngineEventHandler() {
+        @Override
+        public void onJoinChannelSuccess(String channel, int uid, int elapsed) {
+            runOnUiThread(() -> Toast.makeText(ChatroomActivity.this, "Voice Channel Joined! 🎧", Toast.LENGTH_SHORT).show());
+        }
+        @Override
+        public void onUserJoined(int uid, int elapsed) {
+            runOnUiThread(() -> Toast.makeText(ChatroomActivity.this, "Someone started speaking! 🗣️", Toast.LENGTH_SHORT).show());
+        }
+        @Override
+        public void onUserOffline(int uid, int reason) {
+            runOnUiThread(() -> Toast.makeText(ChatroomActivity.this, "Someone left voice! 🚪", Toast.LENGTH_SHORT).show());
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chatroom);
+
+        // 🚨 MIC PERMISSION CHECK
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 22);
+        }
 
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
@@ -78,6 +128,7 @@ public class ChatroomActivity extends AppCompatActivity {
         if(mAuth.getCurrentUser() != null) {
             currentUserEmail = mAuth.getCurrentUser().getEmail();
             currentUserId = mAuth.getCurrentUser().getUid();
+            agoraUid = Math.abs(currentUserId.hashCode()) % 10000;
             fetchMyProfileInfo(); 
         } else {
             finish(); 
@@ -89,14 +140,16 @@ public class ChatroomActivity extends AppCompatActivity {
         btnMic = findViewById(R.id.btnMic);
         btnSend = findViewById(R.id.btnSend);
         btnClose = findViewById(R.id.btnClose);
-        btnShare = findViewById(R.id.btnShare); 
         etMessage = findViewById(R.id.etMessage);
         layoutMessages = findViewById(R.id.layoutMessages);
         chatScroll = findViewById(R.id.chatScroll);
         hostInfo = findViewById(R.id.hostInfo);
         micIndicator = findViewById(R.id.micIndicator);
         
-        // Link Seats Safely
+        try {
+            btnShare = findViewById(R.id.btnShare); 
+        } catch (Exception e) {}
+        
         seatLayouts[0] = findViewById(R.id.seat1); seatTexts[0] = findViewById(R.id.tvSeat1); seatImages[0] = findViewById(R.id.ivSeat1); seatMuteIcons[0] = findViewById(R.id.muteIcon1);
         seatLayouts[1] = findViewById(R.id.seat2); seatTexts[1] = findViewById(R.id.tvSeat2); seatImages[1] = findViewById(R.id.ivSeat2); seatMuteIcons[1] = findViewById(R.id.muteIcon2);
         seatLayouts[2] = findViewById(R.id.seat3); seatTexts[2] = findViewById(R.id.tvSeat3); seatImages[2] = findViewById(R.id.ivSeat3); seatMuteIcons[2] = findViewById(R.id.muteIcon3);
@@ -190,15 +243,50 @@ public class ChatroomActivity extends AppCompatActivity {
         }
     }
 
-    private void fetchMyProfileInfo() {
-        db.collection("Users").document(currentUserId).get()
-            .addOnSuccessListener(documentSnapshot -> {
-                if (documentSnapshot.exists()) {
-                    if (documentSnapshot.getString("userName") != null) currentUserName = documentSnapshot.getString("userName");
-                    if (documentSnapshot.getString("avatarUrl") != null) myAvatarUrl = documentSnapshot.getString("avatarUrl");
+    // 🔥 INITIALIZE AGORA AND FETCH TOKEN
+    private void initializeAndJoinAgora() {
+        try {
+            mRtcEngine = RtcEngine.create(getBaseContext(), AGORA_APP_ID, mRtcEventHandler);
+            
+            mRtcEngine.setChannelProfile(Constants.CHANNEL_PROFILE_LIVE_BROADCASTING);
+            if (isOnSeat || isHost) {
+                mRtcEngine.setClientRole(Constants.CLIENT_ROLE_BROADCASTER);
+                mRtcEngine.enableLocalAudio(true); 
+            } else {
+                mRtcEngine.setClientRole(Constants.CLIENT_ROLE_AUDIENCE);
+            }
+
+            fetchSecureAgoraToken(roomName, agoraUid);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void fetchSecureAgoraToken(String channelName, int uid) {
+        String finalUrl = SERVER_URL + "?channelName=" + channelName + "&uid=" + uid;
+
+        StringRequest request = new StringRequest(Request.Method.GET, finalUrl,
+            new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    try {
+                        JSONObject obj = new JSONObject(response);
+                        String secureToken = obj.getString("token");
+                        mRtcEngine.joinChannel(secureToken, channelName, "", uid);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
-                updateSeatsDisplay();
+            },
+            new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Toast.makeText(ChatroomActivity.this, "Voice Server Connection Failed!", Toast.LENGTH_SHORT).show();
+                }
             });
+
+        Volley.newRequestQueue(this).add(request);
     }
 
     private void verifyHostFromServer() {
@@ -222,8 +310,22 @@ public class ChatroomActivity extends AppCompatActivity {
                             updateMicVisibility(); 
                             updateSeatsDisplay();
                         }
+                        
+                        // 🚨 ROOM CHECK HONE KE BAAD VOICE ENGINE START KAREGA
+                        initializeAndJoinAgora();
                     }
                 });
+    }
+
+    private void fetchMyProfileInfo() {
+        db.collection("Users").document(currentUserId).get()
+            .addOnSuccessListener(documentSnapshot -> {
+                if (documentSnapshot.exists()) {
+                    if (documentSnapshot.getString("userName") != null) currentUserName = documentSnapshot.getString("userName");
+                    if (documentSnapshot.getString("avatarUrl") != null) myAvatarUrl = documentSnapshot.getString("avatarUrl");
+                }
+                updateSeatsDisplay();
+            });
     }
 
     private void shareChatroomLink() {
@@ -248,9 +350,11 @@ public class ChatroomActivity extends AppCompatActivity {
                 tvMicStatus.setTextColor(android.graphics.Color.GREEN);
             }
             if (btnMic != null) btnMic.setColorFilter(android.graphics.Color.GREEN);
+            if (mRtcEngine != null) mRtcEngine.enableLocalAudio(true); 
         } else {
             if (micIndicator != null) micIndicator.setVisibility(View.GONE);
             if (btnMic != null) btnMic.setVisibility(View.GONE);
+            if (mRtcEngine != null) mRtcEngine.enableLocalAudio(false); 
         }
     }
 
@@ -262,12 +366,14 @@ public class ChatroomActivity extends AppCompatActivity {
                 tvMicStatus.setTextColor(android.graphics.Color.RED);
             }
             if(btnMic != null) btnMic.setColorFilter(android.graphics.Color.RED);
+            if (mRtcEngine != null) mRtcEngine.muteLocalAudioStream(true); 
         } else {
             if(tvMicStatus != null) {
                 tvMicStatus.setText("Your mic is ON. Say hello to others! 🎙️");
                 tvMicStatus.setTextColor(android.graphics.Color.GREEN);
             }
             if(btnMic != null) btnMic.setColorFilter(android.graphics.Color.GREEN);
+            if (mRtcEngine != null) mRtcEngine.muteLocalAudioStream(false); 
         }
     }
 
@@ -291,7 +397,6 @@ public class ChatroomActivity extends AppCompatActivity {
                     seatImages[i].setImageResource(android.R.drawable.sym_def_app_icon);
                 }
                 
-                // Show Mute Icon if Muted
                 if(isSeatMuted[i]) seatMuteIcons[i].setVisibility(View.VISIBLE);
                 else seatMuteIcons[i].setVisibility(View.GONE);
 
@@ -324,7 +429,7 @@ public class ChatroomActivity extends AppCompatActivity {
             }
         } else {
             if (seatIndex == filledSeats) {
-                Toast.makeText(ChatroomActivity.this, "Request Sent to Host!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ChatroomActivity.this, "Request Sent to Host! Please wait for approval.", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(ChatroomActivity.this, "You can't control this seat.", Toast.LENGTH_SHORT).show();
             }
@@ -350,7 +455,6 @@ public class ChatroomActivity extends AppCompatActivity {
         builder.show();
     }
 
-    // 🔥 NEW: KICK AUR MUTE LOGIC
     private void showHostPowersDialog(final int seatIndex) {
         String muteOption = isSeatMuted[seatIndex] ? "Unmute User 🔊" : "Mute User 🔇";
         String[] powers = {muteOption, "Kick User 🥾", "Block User 🚫"};
@@ -358,16 +462,16 @@ public class ChatroomActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Host Controls (Seat " + (seatIndex + 1) + ")");
         builder.setItems(powers, (dialog, which) -> {
-            if (which == 0) { // MUTE / UNMUTE
+            if (which == 0) { 
                 isSeatMuted[seatIndex] = !isSeatMuted[seatIndex];
                 updateSeatsDisplay();
                 Toast.makeText(ChatroomActivity.this, isSeatMuted[seatIndex] ? "User Muted!" : "User Unmuted!", Toast.LENGTH_SHORT).show();
-            } else if (which == 1) { // KICK
-                filledSeats--; // User ko hata diya
-                isSeatMuted[seatIndex] = false; // Reset mute status
+            } else if (which == 1) { 
+                filledSeats--; 
+                isSeatMuted[seatIndex] = false; 
                 updateSeatsDisplay();
                 Toast.makeText(ChatroomActivity.this, "User Kicked from Seat!", Toast.LENGTH_SHORT).show();
-            } else if (which == 2) { // BLOCK
+            } else if (which == 2) { 
                 filledSeats--; 
                 isSeatMuted[seatIndex] = false;
                 updateSeatsDisplay();
@@ -394,10 +498,25 @@ public class ChatroomActivity extends AppCompatActivity {
                     mySeatIndex = -1;
                     updateMicVisibility(); 
                     updateSeatsDisplay();
+                    
+                    if (mRtcEngine != null) {
+                        mRtcEngine.setClientRole(Constants.CLIENT_ROLE_AUDIENCE);
+                        mRtcEngine.enableLocalAudio(false);
+                    }
                 }
             }
         });
         builder.show();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mRtcEngine != null) {
+            mRtcEngine.leaveChannel();
+            RtcEngine.destroy();
+            mRtcEngine = null;
+        }
     }
 
     @Override
