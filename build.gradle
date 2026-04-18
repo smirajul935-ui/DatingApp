@@ -1,7 +1,5 @@
-plugins {
-    id 'com.android.application'
-    id 'com.google.gms.google-services'
-}
+apply plugin: 'com.android.application'
+apply plugin: 'com.google.gms.google-services'
 
 android {
     namespace 'com.tech.datingapp'
@@ -38,6 +36,6 @@ dependencies {
     implementation 'com.github.bumptech.glide:glide:4.15.1'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.15.1'
     
-    // 🔥 AGORA VOICE SDK (Ye line tumhari error theek karegi)
+    // 🔥 AGORA VOICE SDK
     implementation 'io.agora.rtc:full-sdk:4.1.1'
 }
