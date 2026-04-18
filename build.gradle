@@ -1,41 +1,18 @@
-apply plugin: 'com.android.application'
-apply plugin: 'com.google.gms.google-services'
-
-android {
-    namespace 'com.tech.datingapp'
-    compileSdk 33
-
-    defaultConfig {
-        applicationId "com.tech.datingapp"
-        minSdk 24
-        targetSdk 33
-        versionCode 1
-        versionName "1.0"
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
     }
-
-    buildTypes {
-        release {
-            minifyEnabled false
-            shrinkResources false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.4.2'
+        // Ye line Firebase ko app se jodegi
+        classpath 'com.google.gms:google-services:4.4.0' 
     }
 }
-
-dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.8.0'
-    implementation 'com.android.volley:volley:1.2.1'
-
-    // Firebase
-    implementation platform('com.google.firebase:firebase-bom:32.7.0')
-    implementation 'com.google.firebase:firebase-auth'
-    implementation 'com.google.firebase:firebase-firestore'
-
-    // Glide (For loading background images from GitHub)
-    implementation 'com.github.bumptech.glide:glide:4.15.1'
-    annotationProcessor 'com.github.bumptech.glide:compiler:4.15.1'
-    
-    // 🔥 AGORA VOICE SDK
-    implementation 'io.agora.rtc:full-sdk:4.1.1'
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url 'https://jitpack.io' }
+    }
 }
