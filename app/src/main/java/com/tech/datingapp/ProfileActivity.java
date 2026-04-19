@@ -41,10 +41,9 @@ public class ProfileActivity extends AppCompatActivity {
     FirebaseFirestore db;
     String currentUserId;
     
-    // Default DP
-    String currentAvatarUrl = "https://raw.githubusercontent.com/smirajul935-ui/Datingappdp/main/dp1.png"; 
+    // 🔥 PREMIUM AVATARS (API-based Fast Avatars)
+    String currentAvatarUrl = "https://api.dicebear.com/7.x/avataaars/png?seed=Alex"; 
 
-    // 🔥 DYNAMIC LIST (Aage chalkar ye Firebase se fetch hoga)
     List<String> avatarList = new ArrayList<>();
 
     @Override
@@ -69,14 +68,14 @@ public class ProfileActivity extends AppCompatActivity {
         btnSaveProfile = findViewById(R.id.btnSaveProfile);
         rvAvatars = findViewById(R.id.rvAvatars);
 
-        // Add tumhari repo ke links (Tum inko baad me badha sakte ho)
-        avatarList.add("https://raw.githubusercontent.com/smirajul935-ui/Datingappdp/main/dp1.png");
-        avatarList.add("https://raw.githubusercontent.com/smirajul935-ui/Datingappdp/main/dp2.png");
-        avatarList.add("https://raw.githubusercontent.com/smirajul935-ui/Datingappdp/main/dp3.png");
-        avatarList.add("https://raw.githubusercontent.com/smirajul935-ui/Datingappdp/main/dp4.png");
-        avatarList.add("https://raw.githubusercontent.com/smirajul935-ui/Datingappdp/main/dp5.png");
+        // 🔥 6 Premium 3D Style Avatars (Male & Female mix)
+        avatarList.add("https://api.dicebear.com/7.x/avataaars/png?seed=Alex");     // Boy 1
+        avatarList.add("https://api.dicebear.com/7.x/avataaars/png?seed=Jessica");  // Girl 1
+        avatarList.add("https://api.dicebear.com/7.x/avataaars/png?seed=Sam");      // Boy 2
+        avatarList.add("https://api.dicebear.com/7.x/avataaars/png?seed=Mia");      // Girl 2
+        avatarList.add("https://api.dicebear.com/7.x/avataaars/png?seed=King");     // Boy 3
+        avatarList.add("https://api.dicebear.com/7.x/avataaars/png?seed=Bella");    // Girl 3
 
-        // Setup RecyclerView
         if(rvAvatars != null) {
             rvAvatars.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
             AvatarAdapter adapter = new AvatarAdapter(avatarList);
@@ -99,7 +98,7 @@ public class ProfileActivity extends AppCompatActivity {
                     Map<String, Object> userProfile = new HashMap<>();
                     userProfile.put("userName", userName);
                     userProfile.put("gender", gender);
-                    userProfile.put("avatarUrl", currentAvatarUrl); 
+                    userProfile.put("avatarUrl", currentAvatarUrl); // Save Avatar
 
                     btnSaveProfile.setEnabled(false);
                     btnSaveProfile.setText("Saving...");
@@ -144,21 +143,20 @@ public class ProfileActivity extends AppCompatActivity {
                         }
                         if(savedAvatar != null && !savedAvatar.isEmpty()) {
                             currentAvatarUrl = savedAvatar;
-                            try { 
-                                Glide.with(ProfileActivity.this)
-                                     .load(currentAvatarUrl)
-                                     .diskCacheStrategy(DiskCacheStrategy.NONE)
-                                     .skipMemoryCache(true)
-                                     .circleCrop()
-                                     .into(ivAvatar); 
-                            } catch (Exception e) {}
                         }
+                        
+                        try { 
+                            Glide.with(ProfileActivity.this)
+                                 .load(currentAvatarUrl)
+                                 .circleCrop()
+                                 .into(ivAvatar); 
+                        } catch (Exception e) {}
                     }
                 }
             });
     }
 
-    // 🔥 INNER ADAPTER CLASS FOR RECYCLERVIEW (100% Safe Java Code)
+    // ADAPTER FOR AVATAR LIST
     class AvatarAdapter extends RecyclerView.Adapter<AvatarAdapter.ViewHolder> {
         List<String> list;
         
@@ -180,8 +178,6 @@ public class ProfileActivity extends AppCompatActivity {
             try {
                 Glide.with(ProfileActivity.this)
                      .load(url)
-                     .diskCacheStrategy(DiskCacheStrategy.NONE)
-                     .skipMemoryCache(true)
                      .placeholder(android.R.drawable.sym_def_app_icon)
                      .circleCrop()
                      .into(holder.img);
@@ -196,8 +192,6 @@ public class ProfileActivity extends AppCompatActivity {
                     try { 
                         Glide.with(ProfileActivity.this)
                              .load(currentAvatarUrl)
-                             .diskCacheStrategy(DiskCacheStrategy.NONE)
-                             .skipMemoryCache(true)
                              .circleCrop()
                              .into(ivAvatar); 
                     } catch (Exception e) {
