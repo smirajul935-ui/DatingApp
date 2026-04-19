@@ -25,8 +25,6 @@ import androidx.core.content.ContextCompat;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
@@ -45,6 +43,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.SetOptions;
 
 import org.json.JSONObject;
 
@@ -53,7 +52,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// AGORA IMPORTS
 import io.agora.rtc2.Constants;
 import io.agora.rtc2.IRtcEngineEventHandler;
 import io.agora.rtc2.RtcEngine;
@@ -68,36 +66,41 @@ public class ChatroomActivity extends AppCompatActivity {
     ScrollView chatScroll;
     RelativeLayout mainLayout;
 
-    // SEATS
+    // 🪑 SEAT ARRAYS
     RelativeLayout[] seatLayouts = new RelativeLayout[8];
     TextView[] seatTexts = new TextView[8];
     ImageView[] seatImages = new ImageView[8];
     ImageView[] seatMuteIcons = new ImageView[8];
-    boolean[] isSeatMuted = new boolean[8];
+
+    // 🔥 LIVE SEAT DATA (From Firebase)
+    String[] seatUserIds = new String[8];
+    String[] seatUserNames = new String[8];
+    String[] seatAvatarUrls = new String[8];
+    boolean[] seatIsMuted = new boolean[8];
 
     FirebaseAuth mAuth;
     FirebaseFirestore db;
     String roomName, currentUserEmail, currentUserId, currentUserName;
-    String myAvatarUrl = "default"; 
+    String myAvatarUrl = "https://raw.githubusercontent.com/smirajul935/DatingApp/main/avatar.png"; 
     
     boolean isHost = false; 
     boolean isOnSeat = false; 
     int mySeatIndex = -1;
     boolean isMicMuted = false;
-    int filledSeats = 1; 
 
     private RtcEngine mRtcEngine;
     private int agoraUid = 0; 
     private String SERVER_URL = "https://datingserver-ymcg.onrender.com/api/agora-token";
-    private String AGORA_APP_ID = "2d86b6c9fb734633ba19efd1b9126658"; // Replace with your ID
+    private String AGORA_APP_ID = "2d86b6c9fb734633ba19efd1b9126658"; // TUMHARI APP ID DAALNA
 
     List<String> pendingRequestsIds = new ArrayList<>();
     List<String> pendingRequestsNames = new ArrayList<>();
+    List<String> pendingRequestsAvatars = new ArrayList<>(); // 🔥 Naya: DP bhi aayegi request me
 
     private final IRtcEngineEventHandler mRtcEventHandler = new IRtcEngineEventHandler() {
         @Override
         public void onJoinChannelSuccess(String channel, int uid, int elapsed) {
-            runOnUiThread(() -> Toast.makeText(ChatroomActivity.this, "Voice Connected Fast! ⚡", Toast.LENGTH_SHORT).show());
+            runOnUiThread(() -> Toast.makeText(ChatroomActivity.this, "Voice Connected! ⚡", Toast.LENGTH_SHORT).show());
         }
     };
 
@@ -121,6 +124,14 @@ public class ChatroomActivity extends AppCompatActivity {
         } else {
             finish(); 
             return;
+        }
+
+        // Initialize Arrays to Empty
+        for(int i=0; i<8; i++) {
+            seatUserIds[i] = "";
+            seatUserNames[i] = "Empty";
+            seatAvatarUrls[i] = "";
+            seatIsMuted[i] = false;
         }
 
         tvRoomName = findViewById(R.id.tvRoomName);
@@ -150,6 +161,7 @@ public class ChatroomActivity extends AppCompatActivity {
             if(tvRoomName != null) tvRoomName.setText("👑 " + roomName);
             verifyHostFromServer(); 
             listenForSeatRequests(); 
+            listenToLiveSeats(); // 🔥 NAYA: FIREBASE SE SEATS SUNC KAREGA
         } else {
             finish();
             return;
@@ -246,7 +258,6 @@ public class ChatroomActivity extends AppCompatActivity {
             }
 
             fetchSecureAgoraToken(roomName, agoraUid);
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -263,17 +274,11 @@ public class ChatroomActivity extends AppCompatActivity {
                     if (mRtcEngine != null) {
                         mRtcEngine.joinChannel(secureToken, channelName, "", uid);
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                } catch (Exception e) {}
             },
             error -> Toast.makeText(ChatroomActivity.this, "Voice Server Slow/Failed!", Toast.LENGTH_SHORT).show());
 
-        request.setRetryPolicy(new DefaultRetryPolicy(
-                10000, 
-                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-
+        request.setRetryPolicy(new DefaultRetryPolicy(10000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         Volley.newRequestQueue(this).add(request);
     }
 
@@ -286,11 +291,19 @@ public class ChatroomActivity extends AppCompatActivity {
                         String serverHostId = document.getString("hostId");
 
                         if (serverHostId != null && serverHostId.equals(currentUserId)) {
-                            isHost = true; isOnSeat = true; mySeatIndex = 0; 
+                            isHost = true; 
+                            
+                            // Host jab room me aaye, toh pehli seat apne naam kar le Firebase pe!
+                            Map<String, Object> hostSeat = new HashMap<>();
+                            hostSeat.put("userId", currentUserId);
+                            hostSeat.put("userName", currentUserName != null ? currentUserName : "Host");
+                            hostSeat.put("avatarUrl", myAvatarUrl);
+                            hostSeat.put("isMuted", false);
+                            db.collection("Rooms").document(roomName).collection("Seats").document("0").set(hostSeat);
+                            
                         } else {
-                            isHost = false; isOnSeat = false; mySeatIndex = -1;
+                            isHost = false; 
                         }
-                        updateMicVisibility(); updateSeatsDisplay();
                         initializeAndJoinAgora();
                     }
                 });
@@ -303,7 +316,6 @@ public class ChatroomActivity extends AppCompatActivity {
                     if (documentSnapshot.getString("userName") != null) currentUserName = documentSnapshot.getString("userName");
                     if (documentSnapshot.getString("avatarUrl") != null) myAvatarUrl = documentSnapshot.getString("avatarUrl");
                 }
-                updateSeatsDisplay();
             });
     }
 
@@ -326,16 +338,29 @@ public class ChatroomActivity extends AppCompatActivity {
                 tvMicStatus.setTextColor(android.graphics.Color.GREEN);
             }
             if (btnMic != null) btnMic.setColorFilter(android.graphics.Color.GREEN);
-            if (mRtcEngine != null) mRtcEngine.enableLocalAudio(true); 
+            if (mRtcEngine != null) {
+                mRtcEngine.setClientRole(Constants.CLIENT_ROLE_BROADCASTER);
+                mRtcEngine.enableLocalAudio(true); 
+            }
         } else {
             if (micIndicator != null) micIndicator.setVisibility(View.GONE);
             if (btnMic != null) btnMic.setVisibility(View.GONE);
-            if (mRtcEngine != null) mRtcEngine.enableLocalAudio(false); 
+            if (mRtcEngine != null) {
+                mRtcEngine.setClientRole(Constants.CLIENT_ROLE_AUDIENCE);
+                mRtcEngine.enableLocalAudio(false); 
+            }
         }
     }
 
     private void toggleMic() {
         isMicMuted = !isMicMuted;
+        
+        // Firebase par apni mic mute/unmute status update karo taaki sabko dikhe
+        if(isOnSeat && mySeatIndex != -1) {
+            db.collection("Rooms").document(roomName).collection("Seats").document(String.valueOf(mySeatIndex))
+              .update("isMuted", isMicMuted);
+        }
+        
         if (isMicMuted) {
             if(tvMicStatus != null) { tvMicStatus.setText("Your mic is Muted 🔇"); tvMicStatus.setTextColor(android.graphics.Color.RED); }
             if(btnMic != null) btnMic.setColorFilter(android.graphics.Color.RED);
@@ -347,44 +372,87 @@ public class ChatroomActivity extends AppCompatActivity {
         }
     }
 
-    // 🔥 FIX: Avatar Load in Seats safely
+    // 🚨 🔥 NAYA MAGIC: FIREBASE SE LIVE SEAT SYNCING
+    private void listenToLiveSeats() {
+        db.collection("Rooms").document(roomName).collection("Seats")
+            .addSnapshotListener((value, error) -> {
+                if (error != null || value == null) return;
+                
+                // Pehle sab empty maan lo
+                for(int i=0; i<8; i++) {
+                    seatUserIds[i] = "";
+                    seatUserNames[i] = "Empty";
+                    seatAvatarUrls[i] = "";
+                    seatIsMuted[i] = false;
+                }
+                
+                isOnSeat = false;
+                mySeatIndex = -1;
+
+                // Firebase se data nikal kar array me dalo
+                for (DocumentSnapshot doc : value.getDocuments()) {
+                    int seatIndex = Integer.parseInt(doc.getId()); // ID 0, 1, 2... hogi
+                    if(seatIndex < 8) {
+                        seatUserIds[seatIndex] = doc.getString("userId");
+                        seatUserNames[seatIndex] = doc.getString("userName");
+                        seatAvatarUrls[seatIndex] = doc.getString("avatarUrl");
+                        if (doc.getBoolean("isMuted") != null) {
+                            seatIsMuted[seatIndex] = doc.getBoolean("isMuted");
+                        }
+                        
+                        // Check karo kya meri (Current User) seat hai ye?
+                        if(currentUserId.equals(seatUserIds[seatIndex])) {
+                            isOnSeat = true;
+                            mySeatIndex = seatIndex;
+                        }
+                    }
+                }
+                
+                updateMicVisibility(); // Mic on/off karega seat ke hisab se
+                updateSeatsDisplay(); // Screen par photo lagayega
+            });
+    }
+
     private void updateSeatsDisplay() {
+        // Yeh function ab sirf arrays padhega jo Firebase ne bhare hain
+        
+        // Pata karo konsi aakhri seat bhari hai taaki uske agle wale par "+" lagayein
+        int nextAvailableSeat = 0;
+        while (nextAvailableSeat < 8 && !seatUserIds[nextAvailableSeat].isEmpty()) {
+            nextAvailableSeat++;
+        }
+
         for(int i = 0; i < 8; i++) {
             if(seatTexts[i] == null || seatImages[i] == null) continue;
 
-            if (i < filledSeats) {
-                if (i == 0) { 
-                    seatTexts[i].setText(isHost ? (currentUserName != null ? currentUserName : "Host") : "Host");
-                    seatTexts[i].setTextColor(android.graphics.Color.parseColor("#E91E63"));
-                } else { 
-                    seatTexts[i].setText("User " + i);
-                    seatTexts[i].setTextColor(android.graphics.Color.WHITE);
-                }
+            if (!seatUserIds[i].isEmpty()) {
+                // SEAT BHARI HAI
+                seatTexts[i].setText(seatUserNames[i]);
+                if(i == 0) seatTexts[i].setTextColor(android.graphics.Color.parseColor("#E91E63")); // Host Pink
+                else seatTexts[i].setTextColor(android.graphics.Color.WHITE); // Normal User White
                 
                 seatImages[i].clearColorFilter(); 
-                
-                // Safely load avatar avoiding null context errors
-                if(!isDestroyed() && myAvatarUrl != null && !myAvatarUrl.equals("default")) {
-                    Glide.with(ChatroomActivity.this)
-                         .load(myAvatarUrl)
+                try {
+                    Glide.with(this).load(seatAvatarUrls[i])
                          .diskCacheStrategy(DiskCacheStrategy.NONE)
                          .skipMemoryCache(true)
+                         .placeholder(android.R.drawable.sym_def_app_icon)
                          .circleCrop()
                          .into(seatImages[i]);
-                } else {
-                    seatImages[i].setImageResource(android.R.drawable.sym_def_app_icon);
-                }
+                } catch (Exception e) {}
                 
-                if(isSeatMuted[i]) seatMuteIcons[i].setVisibility(View.VISIBLE);
+                if(seatIsMuted[i]) seatMuteIcons[i].setVisibility(View.VISIBLE);
                 else seatMuteIcons[i].setVisibility(View.GONE);
 
-            } else if (i == filledSeats) { 
+            } else if (i == nextAvailableSeat) { 
+                // AGLI KHALI SEAT (+)
                 seatTexts[i].setText(isHost ? "+ Invite" : "Request");
                 seatTexts[i].setTextColor(isHost ? android.graphics.Color.parseColor("#2196F3") : android.graphics.Color.parseColor("#FFC107"));
                 seatImages[i].setImageResource(android.R.drawable.ic_menu_add);
                 seatImages[i].setColorFilter(isHost ? android.graphics.Color.parseColor("#2196F3") : android.graphics.Color.parseColor("#FFC107"));
                 seatMuteIcons[i].setVisibility(View.GONE);
             } else { 
+                // BAKI KHALI SEATS (LOCKED)
                 seatTexts[i].setText("Empty");
                 seatTexts[i].setTextColor(android.graphics.Color.parseColor("#888888"));
                 seatImages[i].setImageResource(android.R.drawable.ic_secure); 
@@ -399,14 +467,15 @@ public class ChatroomActivity extends AppCompatActivity {
             showSelfSeatControls();
             return;
         }
+        
         if (isHost) {
-            if (seatIndex < filledSeats && seatIndex != 0) {
+            if (!seatUserIds[seatIndex].isEmpty() && seatIndex != 0) {
                 showHostPowersDialog(seatIndex); 
-            } else if (seatIndex == filledSeats) {
-                showPendingRequestsDialog(); 
+            } else if (seatTexts[seatIndex].getText().toString().contains("Invite")) {
+                showPendingRequestsDialog(seatIndex); // Ab Request List seat param ke sath khulegi
             }
         } else {
-            if (seatIndex == filledSeats) {
+            if (seatTexts[seatIndex].getText().toString().contains("Request")) {
                 sendSeatRequestToHost(); 
             } else {
                 Toast.makeText(ChatroomActivity.this, "You can't control this seat.", Toast.LENGTH_SHORT).show();
@@ -418,6 +487,7 @@ public class ChatroomActivity extends AppCompatActivity {
         Map<String, Object> reqData = new HashMap<>();
         reqData.put("userId", currentUserId);
         reqData.put("userName", currentUserName != null ? currentUserName : "Guest");
+        reqData.put("avatarUrl", myAvatarUrl); // DP bhi bhejo request me
         reqData.put("timestamp", FieldValue.serverTimestamp());
 
         db.collection("Rooms").document(roomName).collection("Requests").document(currentUserId)
@@ -433,14 +503,17 @@ public class ChatroomActivity extends AppCompatActivity {
                     if (error != null || value == null) return;
                     pendingRequestsIds.clear();
                     pendingRequestsNames.clear();
+                    pendingRequestsAvatars.clear();
+                    
                     for (DocumentSnapshot doc : value.getDocuments()) {
                         pendingRequestsIds.add(doc.getId());
                         pendingRequestsNames.add(doc.getString("userName") + " (Wants to speak)");
+                        pendingRequestsAvatars.add(doc.getString("avatarUrl"));
                     }
                 });
     }
 
-    private void showPendingRequestsDialog() {
+    private void showPendingRequestsDialog(int seatIndexToFill) {
         if (pendingRequestsNames.isEmpty()) {
             Toast.makeText(this, "No pending requests right now.", Toast.LENGTH_SHORT).show();
             return;
@@ -448,32 +521,43 @@ public class ChatroomActivity extends AppCompatActivity {
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, pendingRequestsNames);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Select user to add on seat:");
+        builder.setTitle("Select user to add on Seat " + (seatIndexToFill + 1) + ":");
         builder.setAdapter(adapter, (dialog, which) -> {
             String selectedUserId = pendingRequestsIds.get(which);
+            String selectedUserName = pendingRequestsNames.get(which).replace(" (Wants to speak)", "");
+            String selectedUserAvatar = pendingRequestsAvatars.get(which);
+            
+            // 1. Firebase se Request Delete karo
             db.collection("Rooms").document(roomName).collection("Requests").document(selectedUserId).delete();
-            if(filledSeats < 8) {
-                filledSeats++; 
-                updateSeatsDisplay();
-            }
+            
+            // 2. Us User ko Seat par add kardo (Firebase me)
+            Map<String, Object> newSeat = new HashMap<>();
+            newSeat.put("userId", selectedUserId);
+            newSeat.put("userName", selectedUserName);
+            newSeat.put("avatarUrl", selectedUserAvatar);
+            newSeat.put("isMuted", false);
+            db.collection("Rooms").document(roomName).collection("Seats").document(String.valueOf(seatIndexToFill)).set(newSeat);
+            
         });
         builder.setNegativeButton("Cancel", null);
         builder.show();
     }
 
     private void showHostPowersDialog(final int seatIndex) {
-        String muteOption = isSeatMuted[seatIndex] ? "Unmute User 🔊" : "Mute User 🔇";
+        String muteOption = seatIsMuted[seatIndex] ? "Unmute User 🔊" : "Mute User 🔇";
         String[] powers = {muteOption, "Kick User 🥾", "Block User 🚫"};
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Host Controls (Seat " + (seatIndex + 1) + ")");
         builder.setItems(powers, (dialog, which) -> {
             if (which == 0) { 
-                isSeatMuted[seatIndex] = !isSeatMuted[seatIndex];
-                updateSeatsDisplay();
+                // Firebase me mute update
+                db.collection("Rooms").document(roomName).collection("Seats").document(String.valueOf(seatIndex))
+                  .update("isMuted", !seatIsMuted[seatIndex]);
+                Toast.makeText(ChatroomActivity.this, "Mute settings changed!", Toast.LENGTH_SHORT).show();
             } else if (which == 1) { 
-                filledSeats--; 
-                isSeatMuted[seatIndex] = false; 
-                updateSeatsDisplay();
+                // KICK: Firebase se seat delete
+                db.collection("Rooms").document(roomName).collection("Seats").document(String.valueOf(seatIndex)).delete();
+                Toast.makeText(ChatroomActivity.this, "User Kicked from Seat!", Toast.LENGTH_SHORT).show();
             }
         });
         builder.show();
@@ -489,8 +573,8 @@ public class ChatroomActivity extends AppCompatActivity {
             else if (which == 1) {
                 if (isHost) Toast.makeText(ChatroomActivity.this, "Host cannot leave seat!", Toast.LENGTH_SHORT).show();
                 else {
-                    isOnSeat = false; mySeatIndex = -1; updateMicVisibility(); updateSeatsDisplay();
-                    if (mRtcEngine != null) { mRtcEngine.setClientRole(Constants.CLIENT_ROLE_AUDIENCE); mRtcEngine.enableLocalAudio(false); }
+                    // Leave Seat: Firebase se apni seat delete kar do
+                    db.collection("Rooms").document(roomName).collection("Seats").document(String.valueOf(mySeatIndex)).delete();
                 }
             }
         });
@@ -503,27 +587,22 @@ public class ChatroomActivity extends AppCompatActivity {
         if (mRtcEngine != null) { mRtcEngine.leaveChannel(); RtcEngine.destroy(); mRtcEngine = null; }
     }
 
-    // 🔥 FIX: BACK BUTTON LOGIC (Exit vs Minimize)
     @Override
     public void onBackPressed() { showExitDialog(); }
 
     private void showExitDialog() {
-        new AlertDialog.Builder(this).setTitle("Exit Chat?")
-            .setMessage("Do you want to minimize the chat (stay online) or exit completely?")
+        new AlertDialog.Builder(this).setTitle("Exit Chat?").setMessage("Do you want to minimize or exit?")
             .setPositiveButton("Exit", (dialog, which) -> {
-                // Completely Exit
-                if (mRtcEngine != null) {
-                    mRtcEngine.leaveChannel();
-                    mRtcEngine = null;
+                // Agar main Host hu aur Room Exit karu, toh pura Room Delete ho jana chahiye
+                if(isHost) {
+                    db.collection("Rooms").document(currentUserId).delete();
+                } else if(isOnSeat && mySeatIndex != -1) {
+                    // Agar audience hu aur seat par tha toh seat se utar jao
+                    db.collection("Rooms").document(roomName).collection("Seats").document(String.valueOf(mySeatIndex)).delete();
                 }
-                finish(); // Close activity and return to home
+                finish();
             })
-            .setNegativeButton("Minimize", (dialog, which) -> {
-                // Minimize: Go back to HomeActivity BUT keep this chatroom alive in background
-                Intent intent = new Intent(ChatroomActivity.this, HomeActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT); // Brings home to front without killing chat
-                startActivity(intent);
-            })
+            .setNegativeButton("Minimize", (dialog, which) -> moveTaskToBack(true))
             .setNeutralButton("Cancel", null).show();
     }
 }
