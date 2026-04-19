@@ -17,6 +17,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -40,7 +43,7 @@ public class HomeActivity extends AppCompatActivity {
     FirebaseAuth mAuth;
     FirebaseFirestore db;
     String currentUserId;
-    String myUserName = "User"; // Default name
+    String myUserName = "User"; 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,58 +71,51 @@ public class HomeActivity extends AppCompatActivity {
         rvRooms.setAdapter(roomAdapter);
 
         fetchRoomsFromFirebase();
+        
+        // 🔥 SERVER KO WARM-UP (JAAGNE) KE LIYE PING KARO
+        wakeUpRenderServer();
 
         if (btnCreateRoom != null) {
-            btnCreateRoom.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    checkIfUserAlreadyHasRoom();
-                }
-            });
+            btnCreateRoom.setOnClickListener(v -> checkIfUserAlreadyHasRoom());
         }
 
         if (btnProfile != null) {
-            btnProfile.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent(HomeActivity.this, ProfileActivity.class);
-                    startActivity(intent);
-                }
+            btnProfile.setOnClickListener(v -> {
+                Intent intent = new Intent(HomeActivity.this, ProfileActivity.class);
+                startActivity(intent);
             });
         }
         
         if (btnMessages != null) {
-            btnMessages.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Toast.makeText(HomeActivity.this, "Opening Messages... (Coming Soon)", Toast.LENGTH_SHORT).show();
-                }
-            });
+            btnMessages.setOnClickListener(v -> Toast.makeText(HomeActivity.this, "Opening Messages... (Coming Soon)", Toast.LENGTH_SHORT).show());
         }
+    }
+
+    // 🚨 YEH FUNCTION SERVER KO SONE NAHI DEGA
+    private void wakeUpRenderServer() {
+        String url = "https://datingserver-ymcg.onrender.com/api/agora-token?channelName=wakeup&uid=0";
+        StringRequest request = new StringRequest(Request.Method.GET, url, 
+            response -> { /* Server is awake, do nothing */ }, 
+            error -> { /* Ignore error on warmup */ });
+        Volley.newRequestQueue(this).add(request);
     }
 
     private void fetchMyProfileName() {
         db.collection("Users").document(currentUserId).get()
-            .addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-                @Override
-                public void onSuccess(DocumentSnapshot documentSnapshot) {
-                    if (documentSnapshot.exists() && documentSnapshot.getString("userName") != null) {
-                        myUserName = documentSnapshot.getString("userName");
-                    }
+            .addOnSuccessListener(documentSnapshot -> {
+                if (documentSnapshot.exists() && documentSnapshot.getString("userName") != null) {
+                    myUserName = documentSnapshot.getString("userName");
                 }
             });
     }
 
     private void checkIfUserAlreadyHasRoom() {
         db.collection("Rooms").whereEqualTo("hostId", currentUserId).get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful() && task.getResult() != null && !task.getResult().isEmpty()) {
-                            Toast.makeText(HomeActivity.this, "Aap ek hi room create kar sakte hain!", Toast.LENGTH_LONG).show();
-                        } else {
-                            showCreateRoomDialog();
-                        }
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && task.getResult() != null && !task.getResult().isEmpty()) {
+                        Toast.makeText(HomeActivity.this, "Aap ek hi room create kar sakte hain!", Toast.LENGTH_LONG).show();
+                    } else {
+                        showCreateRoomDialog();
                     }
                 });
     }
@@ -127,7 +123,6 @@ public class HomeActivity extends AppCompatActivity {
     private void fetchRoomsFromFirebase() {
         db.collection("Rooms").addSnapshotListener((value, error) -> {
             if (error != null || value == null) return;
-            
             roomList.clear(); 
             for (DocumentSnapshot doc : value.getDocuments()) {
                 if (doc.exists()) {
@@ -148,39 +143,33 @@ public class HomeActivity extends AppCompatActivity {
         final RadioButton rbVoice = dialog.findViewById(R.id.rbVoice);
         final Button btnSubmitRoom = dialog.findViewById(R.id.btnSubmitRoom);
 
-        btnSubmitRoom.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final String roomName = etRoomName.getText().toString().trim();
-                if (roomName.isEmpty()) {
-                    Toast.makeText(HomeActivity.this, "Room ka naam likho!", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                final String roomType = rbVoice.isChecked() ? "Voice" : "Video";
-
-                Map<String, Object> roomData = new HashMap<>();
-                roomData.put("roomName", roomName);
-                roomData.put("roomType", roomType);
-                roomData.put("hostId", currentUserId);
-                roomData.put("hostName", myUserName); 
-                roomData.put("onlineCount", 1);
-                
-                btnSubmitRoom.setEnabled(false);
-
-                db.collection("Rooms").document(currentUserId)
-                    .set(roomData)
-                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                        @Override
-                        public void onSuccess(Void aVoid) {
-                            Toast.makeText(HomeActivity.this, "Room Created!", Toast.LENGTH_SHORT).show();
-                            dialog.dismiss();
-                            Intent intent = new Intent(HomeActivity.this, ChatroomActivity.class);
-                            intent.putExtra("ROOM_NAME", roomName);
-                            startActivity(intent);
-                        }
-                    });
+        btnSubmitRoom.setOnClickListener(v -> {
+            final String roomName = etRoomName.getText().toString().trim();
+            if (roomName.isEmpty()) {
+                Toast.makeText(HomeActivity.this, "Room ka naam likho!", Toast.LENGTH_SHORT).show();
+                return;
             }
+
+            final String roomType = rbVoice.isChecked() ? "Voice" : "Video";
+
+            Map<String, Object> roomData = new HashMap<>();
+            roomData.put("roomName", roomName);
+            roomData.put("roomType", roomType);
+            roomData.put("hostId", currentUserId);
+            roomData.put("hostName", myUserName); 
+            roomData.put("onlineCount", 1);
+            
+            btnSubmitRoom.setEnabled(false);
+
+            db.collection("Rooms").document(currentUserId)
+                .set(roomData)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(HomeActivity.this, "Room Created!", Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                    Intent intent = new Intent(HomeActivity.this, ChatroomActivity.class);
+                    intent.putExtra("ROOM_NAME", roomName);
+                    startActivity(intent);
+                });
         });
         dialog.show();
     }
