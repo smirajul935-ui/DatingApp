@@ -78,7 +78,7 @@ public class ChatroomActivity extends AppCompatActivity {
     private RtcEngine mRtcEngine;
     private int agoraUid = 0; 
     private String SERVER_URL = "https://datingserver-ymcg.onrender.com/api/agora-token";
-    private String AGORA_APP_ID = "YOUR_AGORA_APP_ID_HERE"; // TUMHARI APP ID DAALNA
+    private String AGORA_APP_ID = "2d86b6c9fb734633ba19efd1b9126658"; // TUMHARI APP ID DAALNA
 
     // 🔥 Real Requests aayengi isme
     List<String> pendingRequestsIds = new ArrayList<>();
@@ -223,7 +223,7 @@ public class ChatroomActivity extends AppCompatActivity {
         try {
             RtcEngineConfig config = new RtcEngineConfig();
             config.mContext = getBaseContext();
-            config.mAppId = 2d86b6c9fb734633ba19efd1b9126658;
+            config.mAppId = AGORA_APP_ID;
             config.mEventHandler = mRtcEventHandler;
             mRtcEngine = RtcEngine.create(config);
             
