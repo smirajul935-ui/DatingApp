@@ -14,18 +14,29 @@
         android:usesCleartextTraffic="true" 
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
         
-        <!-- Yaha nayi ProfileActivity ko add kar diya gaya hai -->
         <activity android:name=".HomeActivity" />
         <activity android:name=".ChatroomActivity" />
         <activity android:name=".TermsActivity" />
         <activity android:name=".ProfileActivity" />
 
+        <!-- 🚨 MAIN ACTIVITY (Yahi link catch karegi) -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- 🔥 DEEP LINKING RULE: WhatsApp se direct aane ke liye -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="securedating.app"
+                    android:pathPrefix="/join" />
             </intent-filter>
         </activity>
     </application>
