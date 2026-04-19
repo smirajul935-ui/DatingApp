@@ -74,7 +74,7 @@ public class ChatroomActivity extends AppCompatActivity {
     String roomName, currentUserEmail, currentUserId, currentUserName;
     
     // Default GitHub Avatar URL
-    String myAvatarUrl = "https://raw.githubusercontent.com/smirajul935/DatingApp/main/dp1.png"; 
+    String myAvatarUrl = "https://api.dicebear.com/7.x/avataaars/png?seed=Alex";
     
     // 🔥 SECURITY VARIABLES
     boolean isHost = false; 
