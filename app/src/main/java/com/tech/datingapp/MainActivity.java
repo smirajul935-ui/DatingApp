@@ -1,6 +1,7 @@
 package com.tech.datingapp;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -27,12 +28,34 @@ public class MainActivity extends AppCompatActivity {
         
         mAuth = FirebaseAuth.getInstance();
 
-        // 🚨 AUTO-LOGIN CHECK: Agar login hai toh direct T&C screen par jao
+        // 🔥 DEEP LINKING: Check if app was opened via WhatsApp Link
+        Uri data = getIntent().getData();
+        String roomFromLink = null;
+        if (data != null && data.getHost() != null && data.getHost().equals("securedating.app")) {
+            // URL aisi hogi: https://securedating.app/join?room=Love%20Talk
+            roomFromLink = data.getQueryParameter("room");
+        }
+
+        // 🚨 AUTO-LOGIN & ROUTING
         if (mAuth.getCurrentUser() != null) {
-            Intent intent = new Intent(MainActivity.this, TermsActivity.class);
-            startActivity(intent);
-            finish();
-            return;
+            // Agar Link se aaya hai toh direct Room me bhejo
+            if (roomFromLink != null && !roomFromLink.isEmpty()) {
+                Toast.makeText(this, "Joining Room from Link... 🔗", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(MainActivity.this, ChatroomActivity.class);
+                intent.putExtra("ROOM_NAME", roomFromLink);
+                startActivity(intent);
+                finish();
+                return;
+            } else {
+                // Normally app khola hai toh T&C / Home pe bhejo
+                Intent intent = new Intent(MainActivity.this, TermsActivity.class);
+                startActivity(intent);
+                finish();
+                return;
+            }
+        } else if (roomFromLink != null && !roomFromLink.isEmpty()) {
+            // Agar Login nahi hai par Link dabaya hai, toh usko batao ki pehle login karo
+            Toast.makeText(this, "Please Login first to join the room!", Toast.LENGTH_LONG).show();
         }
 
         setContentView(R.layout.activity_main);
