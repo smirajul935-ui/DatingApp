@@ -25,6 +25,8 @@ import androidx.core.content.ContextCompat;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
@@ -32,6 +34,8 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -40,6 +44,7 @@ import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import org.json.JSONObject;
 
@@ -48,6 +53,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+// AGORA IMPORTS
 import io.agora.rtc2.Constants;
 import io.agora.rtc2.IRtcEngineEventHandler;
 import io.agora.rtc2.RtcEngine;
@@ -62,7 +68,7 @@ public class ChatroomActivity extends AppCompatActivity {
     ScrollView chatScroll;
     RelativeLayout mainLayout;
 
-    // 🪑 SEAT ARRAYS
+    // SEATS
     RelativeLayout[] seatLayouts = new RelativeLayout[8];
     TextView[] seatTexts = new TextView[8];
     ImageView[] seatImages = new ImageView[8];
@@ -72,25 +78,19 @@ public class ChatroomActivity extends AppCompatActivity {
     FirebaseAuth mAuth;
     FirebaseFirestore db;
     String roomName, currentUserEmail, currentUserId, currentUserName;
+    String myAvatarUrl = "default"; 
     
-    // Default GitHub Avatar URL
-    String myAvatarUrl = "https://api.dicebear.com/7.x/avataaars/png?seed=Alex";
-    
-    // 🔥 SECURITY VARIABLES
     boolean isHost = false; 
     boolean isOnSeat = false; 
     int mySeatIndex = -1;
     boolean isMicMuted = false;
     int filledSeats = 1; 
 
-    // 🔥 AGORA VARIABLES
     private RtcEngine mRtcEngine;
     private int agoraUid = 0; 
-    
     private String SERVER_URL = "https://datingserver-ymcg.onrender.com/api/agora-token";
-    private String AGORA_APP_ID = "2d86b6c9fb734633ba19efd1b9126658"; // TUMHARI APP ID DAALNA
+    private String AGORA_APP_ID = "2d86b6c9fb734633ba19efd1b9126658"; // Replace with your ID
 
-    // 🔥 Real Requests aayengi isme
     List<String> pendingRequestsIds = new ArrayList<>();
     List<String> pendingRequestsNames = new ArrayList<>();
 
@@ -155,23 +155,16 @@ public class ChatroomActivity extends AppCompatActivity {
             return;
         }
 
-        // 🔥 ROOM KA DYNAMIC BACKGROUND (Github se)
         try {
             mainLayout = getWindow().getDecorView().getRootView().findViewById(android.R.id.content);
-            String githubBgUrl = "https://images.unsplash.com/photo-1550684848-fac1c5b4e853"; 
-            Glide.with(this)
-                 .load(githubBgUrl)
-                 .diskCacheStrategy(DiskCacheStrategy.NONE) // Daily naya background dikhega
-                 .skipMemoryCache(true)
-                 .centerCrop()
-                 .into(new CustomTarget<Drawable>() {
-                    @Override
-                    public void onResourceReady(@NonNull Drawable resource, @Nullable Transition<? super Drawable> transition) {
-                        if (mainLayout != null) mainLayout.setBackground(resource);
-                    }
-                    @Override
-                    public void onLoadCleared(@Nullable Drawable placeholder) {}
-                 });
+            Glide.with(this).load("https://images.unsplash.com/photo-1550684848-fac1c5b4e853").centerCrop().into(new CustomTarget<Drawable>() {
+                @Override
+                public void onResourceReady(@NonNull Drawable resource, @Nullable Transition<? super Drawable> transition) {
+                    if (mainLayout != null) mainLayout.setBackground(resource);
+                }
+                @Override
+                public void onLoadCleared(@Nullable Drawable placeholder) {}
+            });
         } catch (Exception e) {}
 
         if(btnClose != null) btnClose.setOnClickListener(v -> showExitDialog());
@@ -196,7 +189,7 @@ public class ChatroomActivity extends AppCompatActivity {
                     String nameToUse = (currentUserName != null && !currentUserName.isEmpty()) ? currentUserName : currentUserEmail.split("@")[0];
                     chatData.put("senderName", nameToUse);
                     chatData.put("message", message);
-                    chatData.put("avatarUrl", myAvatarUrl); // Send DP URL with message
+                    chatData.put("avatarUrl", myAvatarUrl); 
                     chatData.put("timestamp", FieldValue.serverTimestamp());
                     if(roomName != null) {
                         db.collection("Chatrooms").document(roomName).collection("Messages").add(chatData);
@@ -214,7 +207,6 @@ public class ChatroomActivity extends AppCompatActivity {
                             if (dc.getType() == DocumentChange.Type.ADDED) {
                                 String msgText = dc.getDocument().getString("message");
                                 String senderName = dc.getDocument().getString("senderName"); 
-                                
                                 if (msgText != null && senderName != null) {
                                     TextView newMsg = new TextView(ChatroomActivity.this);
                                     newMsg.setText(senderName + ": " + msgText);
@@ -311,7 +303,7 @@ public class ChatroomActivity extends AppCompatActivity {
                     if (documentSnapshot.getString("userName") != null) currentUserName = documentSnapshot.getString("userName");
                     if (documentSnapshot.getString("avatarUrl") != null) myAvatarUrl = documentSnapshot.getString("avatarUrl");
                 }
-                updateSeatsDisplay(); // DP aane par seats update karo
+                updateSeatsDisplay();
             });
     }
 
@@ -355,7 +347,7 @@ public class ChatroomActivity extends AppCompatActivity {
         }
     }
 
-    // 🔥 GITHUB SE SEAT PAR DP LOAD KARNA
+    // 🔥 FIX: Avatar Load in Seats safely
     private void updateSeatsDisplay() {
         for(int i = 0; i < 8; i++) {
             if(seatTexts[i] == null || seatImages[i] == null) continue;
@@ -370,15 +362,18 @@ public class ChatroomActivity extends AppCompatActivity {
                 }
                 
                 seatImages[i].clearColorFilter(); 
-                try { 
-                    Glide.with(this)
-                         .load(myAvatarUrl) // 🔥 Profile wali DP lag rahi hai
+                
+                // Safely load avatar avoiding null context errors
+                if(!isDestroyed() && myAvatarUrl != null && !myAvatarUrl.equals("default")) {
+                    Glide.with(ChatroomActivity.this)
+                         .load(myAvatarUrl)
                          .diskCacheStrategy(DiskCacheStrategy.NONE)
                          .skipMemoryCache(true)
-                         .placeholder(android.R.drawable.sym_def_app_icon)
                          .circleCrop()
-                         .into(seatImages[i]); 
-                } catch (Exception e) {}
+                         .into(seatImages[i]);
+                } else {
+                    seatImages[i].setImageResource(android.R.drawable.sym_def_app_icon);
+                }
                 
                 if(isSeatMuted[i]) seatMuteIcons[i].setVisibility(View.VISIBLE);
                 else seatMuteIcons[i].setVisibility(View.GONE);
@@ -508,13 +503,27 @@ public class ChatroomActivity extends AppCompatActivity {
         if (mRtcEngine != null) { mRtcEngine.leaveChannel(); RtcEngine.destroy(); mRtcEngine = null; }
     }
 
+    // 🔥 FIX: BACK BUTTON LOGIC (Exit vs Minimize)
     @Override
     public void onBackPressed() { showExitDialog(); }
 
     private void showExitDialog() {
-        new AlertDialog.Builder(this).setTitle("Exit Chat?").setMessage("Do you want to minimize or exit?")
-            .setPositiveButton("Exit", (dialog, which) -> finish())
-            .setNegativeButton("Minimize", (dialog, which) -> moveTaskToBack(true))
+        new AlertDialog.Builder(this).setTitle("Exit Chat?")
+            .setMessage("Do you want to minimize the chat (stay online) or exit completely?")
+            .setPositiveButton("Exit", (dialog, which) -> {
+                // Completely Exit
+                if (mRtcEngine != null) {
+                    mRtcEngine.leaveChannel();
+                    mRtcEngine = null;
+                }
+                finish(); // Close activity and return to home
+            })
+            .setNegativeButton("Minimize", (dialog, which) -> {
+                // Minimize: Go back to HomeActivity BUT keep this chatroom alive in background
+                Intent intent = new Intent(ChatroomActivity.this, HomeActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT); // Brings home to front without killing chat
+                startActivity(intent);
+            })
             .setNeutralButton("Cancel", null).show();
     }
 }
