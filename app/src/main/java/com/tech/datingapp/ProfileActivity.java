@@ -40,7 +40,7 @@ public class ProfileActivity extends AppCompatActivity {
     // 🔥 GITHUB CLOUD DPs (Tumhare GitHub se live images aayengi)
     // Dhyan rahe, GitHub pe inhi naamo se (dp1.png, dp2.png...) photo upload karni hogi!
     String[] avatarLinks = {
-        "https://raw.githubusercontent.com/smirajul935/DatingApp/main/dp1.png", 
+        "https://github.com/smirajul935-ui/Datingappdp/blob/main/dp1.png", 
         "https://raw.githubusercontent.com/smirajul935/DatingApp/main/dp2.png",
         "https://raw.githubusercontent.com/smirajul935/DatingApp/main/dp3.png",
         "https://raw.githubusercontent.com/smirajul935/DatingApp/main/dp4.png",
